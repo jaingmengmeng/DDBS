@@ -3,24 +3,31 @@ project(midterm C CXX)
 
 include(FindThreads)
 include(FindProtobuf)
+
 protobuf_generate_cpp(PROTO_SRC PROTO_HEADER query.proto)
 
-#include PROTO_HEADER ???
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-find_path(BRPC_INCLUDE_PATH NAMES brpc/channel.h)
-find_library(BRPC_LIB NAMES libbrpc.a brpc)
-if((NOT BRPC_INCLUDE_PATH) OR (NOT BRPC_LIB))
-    message(FATAL_ERROR "Fail to find brpc")
-endif()
-include_directories(${BRPC_INCLUDE_PATH})
 
+# brpc
+set(CMAKE_PREFIX_PATH ../../third-party/brpc/lib/)
+find_library(BRPC_LIB NAMES libbrpc.a brpc)
+include_directories(../../third-party/brpc/include)
+
+# mysql-connector
+set(CMAKE_PREFIX_PATH ../../third-party/mysql/lib)
+find_library(MYSQL_LIB NAMES mysqlcppconn)
+include_directories(../../third-party/mysql/include)
+
+# gflags
 find_path(GFLAGS_INCLUDE_PATH gflags/gflags.h)
 find_library(GFLAGS_LIBRARY NAMES gflags libgflags)
 if((NOT GFLAGS_INCLUDE_PATH) OR (NOT GFLAGS_LIBRARY))
     message(FATAL_ERROR "Fail to find gflags")
 endif()
 include_directories(${GFLAGS_INCLUDE_PATH})
+
+
 
 execute_process(
     COMMAND bash -c "grep \"namespace [_A-Za-z0-9]\\+ {\" ${GFLAGS_INCLUDE_PATH}/gflags/gflags_declare.h | head -1 | awk '{print $2}' | tr -d '\n'"
@@ -48,6 +55,7 @@ else()
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
+# leveldb
 find_path(LEVELDB_INCLUDE_PATH NAMES leveldb/db.h)
 find_library(LEVELDB_LIB NAMES leveldb)
 if ((NOT LEVELDB_INCLUDE_PATH) OR (NOT LEVELDB_LIB))
@@ -58,8 +66,6 @@ include_directories(${LEVELDB_INCLUDE_PATH})
 include_directories(${OPENSSL_INCLUDE_DIR})
 find_package(OpenSSL)
 
-include_directories("/usr/local/include")
-
 
 #add_executable(echo_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
 #add_executable(echo_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
@@ -67,6 +73,7 @@ include_directories("/usr/local/include")
 
 add_executable(client main.cpp base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
 add_executable(server query.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(data-loader loadtable.cpp)
 
 set(DYNAMIC_LIB
     ${CMAKE_THREAD_LIBS_INIT}
@@ -75,15 +82,12 @@ set(DYNAMIC_LIB
     ${LEVELDB_LIB}
     ${OPENSSL_CRYPTO_LIBRARY}
     ${OPENSSL_SSL_LIBRARY}
-    ${THRIFT_LIB}
-    ${THRIFTNB_LIB}
-    "/usr/local/lib/libmysqlcppconn.so"
     dl
     )
 
 # target_link_libraries(echo_client ${BRPC_LIB} ${DYNAMIC_LIB})
 # target_link_libraries(echo_server ${BRPC_LIB} ${DYNAMIC_LIB})
 # target_link_libraries(http_server ${BRPC_LIB} ${DYNAMIC_LIB})
-target_link_libraries(server ${BRPC_LIB} ${DYNAMIC_LIB})
-target_link_libraries(client ${BRPC_LIB} ${DYNAMIC_LIB})
+target_link_libraries(server ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
+target_link_libraries(client ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
      
