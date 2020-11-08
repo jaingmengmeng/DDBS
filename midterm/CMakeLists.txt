@@ -73,7 +73,7 @@ find_package(OpenSSL)
 
 add_executable(client main.cpp base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
 add_executable(server query.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(data-loader loadtable.cpp)
+add_executable(data-loader loadtable.cpp base64.cpp)
 
 set(DYNAMIC_LIB
     ${CMAKE_THREAD_LIBS_INIT}
@@ -90,4 +90,5 @@ set(DYNAMIC_LIB
 # target_link_libraries(http_server ${BRPC_LIB} ${DYNAMIC_LIB})
 target_link_libraries(server ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
 target_link_libraries(client ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
+target_link_libraries(data-loader ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
      

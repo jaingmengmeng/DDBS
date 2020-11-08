@@ -71,18 +71,19 @@ int generate_sql_script(int fragnum, std::vector<std::string> ips){
     }
 
 
-    std::string data = R"((1, 'ed', 'Ed Jones', 'edspassword')
-            (2, 'wendy', 'Wendy Williams', 'foobar')
-            (3, 'mary', 'Mary Contrary', 'xxg527')
-            (4, 'lisa', 'lisa Contrary', 'ls123')
-            (5, 'cred', 'cred Flinstone', 'bla123')
-            (6, 'fred', 'Fred Flinstone', 'blah')
-            (7, 'jack', 'Jack Bean', 'gjffdd')
-            (8, 'ed', 'Ed Jones', 'edspassword')
-            (9, 'jack', 'Jack Bean', 'gjffdd')
-            (10, 'ed', 'Ed Jones', '888')
-            (11, 'wendy', 'Wendy Williams', 'foobar')
-            (12, 'mary', 'Mary Contrary', '123')
+    std::string data = R"(
+(1, 'ed', 'Ed Jones', 'edspassword')
+(2, 'wendy', 'Wendy Williams', 'foobar')
+(3, 'mary', 'Mary Contrary', 'xxg527')
+(4, 'lisa', 'lisa Contrary', 'ls123')
+(5, 'cred', 'cred Flinstone', 'bla123')
+(6, 'fred', 'Fred Flinstone', 'blah')
+(7, 'jack', 'Jack Bean', 'gjffdd')
+(8, 'ed', 'Ed Jones', 'edspassword')
+(9, 'jack', 'Jack Bean', 'gjffdd')
+(10, 'ed', 'Ed Jones', '888')
+(11, 'wendy', 'Wendy Williams', 'foobar')
+(12, 'mary', 'Mary Contrary', '123')
 (13, 'lisa', 'lisa Contrary', 'ls123')
 (14, 'cred', 'cred Flinstone', 'bla123')
 (15, 'fred', 'Fred Flinstone', 'blah')
@@ -139,7 +140,7 @@ int generate_sql_script(int fragnum, std::vector<std::string> ips){
     for (auto iter = mp.cbegin(); iter != mp.cend(); iter++)
     {
         // 1.write sql script
-        out.open(R"(/home/swh/code/ddb-test/my_echo_C++/sql-scripts/)" + iter->second.db_name + "-"+ iter->second.table_name + "-" + std::to_string(iter->first) + "-" + iter->second.ip+".sql", std::ios::out|std::ios::trunc);
+        out.open(R"(../sql-scripts/)" + iter->second.db_name + "-"+ iter->second.table_name + "-" + std::to_string(iter->first) + "-" + iter->second.ip+".sql", std::ofstream::out | std::ofstream::trunc);
         if (out.is_open())
         {
             LOG(INFO) << "write file...";
@@ -203,7 +204,7 @@ int main(int argc, char* argv[]){
      ips.push_back("10.77.70.172");
      ips.push_back("10.77.70.189");
      ips.push_back("10.77.70.188");
-     return generate_sql_script(1, ips);
+     return generate_sql_script(3, ips);
 
 //    GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 //
