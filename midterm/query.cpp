@@ -27,20 +27,21 @@ class QueryServiceImpl : public QueryService{
             brpc::ClosureGuard done_guard(done);
             brpc::Controller* cntl = static_cast<brpc::Controller*>(cntl_base);
             
-            execute_query(request->query().Get(0), response);
+            execute_query(request->query(0), response);
             // print response for test
-            auto iter_id = response->id().cbegin();
-            auto iter_fullname = response->fullname().cbegin();
-            auto iter_password = response->password().cbegin();
+            // int size = response->id_size();
+            // auto iter_id = response->id().cbegin();
+            // auto iter_fullname = response->fullname().cbegin();
+            // auto iter_password = response->password().cbegin();
             //std::cout << "---------------------------" << std::endl;
-            std::cout << ">> send data :" << std::endl;
-            while(iter_id != response->id().cend() && iter_fullname != response->fullname().cend() && iter_password != response->password().cend())
-            {
-                std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
-                iter_id++;
-                iter_fullname++;
-                iter_password++;
-            }
+            // std::cout << ">> send data :" << std::endl;
+            // while(iter_id != response->id().cend() && iter_fullname != response->fullname().cend() && iter_password != response->password().cend())
+            // {
+            //     std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
+            //     iter_id++;
+            //     iter_fullname++;
+            //     iter_password++;
+            // }
             //done_guard.release();
         }
     private:

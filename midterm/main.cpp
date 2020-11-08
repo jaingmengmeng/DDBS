@@ -211,19 +211,25 @@ public:
         brpc::ResponseMerger::Result result;
         if(m_op == UNION){
             // print temp result
-            auto iter_id = sub_response1->id().cbegin();
-            auto iter_fullname = sub_response1->fullname().cbegin();
-            auto iter_password = sub_response1->password().cbegin();
-            //std::cout << "---------------------------" << std::endl;
+            // auto iter_id = sub_response1->id().cbegin();
+            // auto iter_fullname = sub_response1->fullname().cbegin();
+            // auto iter_password = sub_response1->password().cbegin();
+            std::cout << "---------------------------" << std::endl;
             std::cout << ">> receive data from a site :" << std::endl;
-            // std::cout << sub_response1->id_size() << std::endl;
-            while(iter_id != sub_response1->id().cend() && iter_fullname != sub_response1->fullname().cend() && iter_password != sub_response1->password().cend())
+            // // std::cout << sub_response1->id_size() << std::endl;
+            // while(iter_id != sub_response1->id().cend() && iter_fullname != sub_response1->fullname().cend() && iter_password != sub_response1->password().cend())
+            // {
+            //     std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
+            //     iter_id++;
+            //     iter_fullname++;
+            //     iter_password++;
+            // }
+            int count = sub_response1->id_size();
+            for (int i = 0; i < count; i++)
             {
-                std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
-                iter_id++;
-                iter_fullname++;
-                iter_password++;
+                std::cout << "(" << sub_response1->id(i) << ", " << sub_response1->fullname(i) << ", " << sub_response1->password(i) << ")" << std::endl;
             }
+            
             std::cout << std::endl;
             response1->MergeFrom(*sub_response1);
             return result;
@@ -332,15 +338,20 @@ int main(int argc, char* argv[]){
         {
             // just print result
             std::cout << ">> final result : (id, fullname, password)" << std::endl;
-            auto iter_id = response.id().cbegin();
-            auto iter_fullname = response.fullname().cbegin();
-            auto iter_password = response.password().cbegin();
-            while(iter_id != response.id().cend() && iter_fullname != response.fullname().cend() && iter_password != response.password().cend())
+            // auto iter_id = response.id().cbegin();
+            // auto iter_fullname = response.fullname().cbegin();
+            // auto iter_password = response.password().cbegin();
+            // while(iter_id != response.id().cend() && iter_fullname != response.fullname().cend() && iter_password != response.password().cend())
+            // {
+            //     std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
+            //     iter_id++;
+            //     iter_fullname++;
+            //     iter_password++;
+            // }
+            int count = response.id_size();
+            for (int i = 0; i < count; i++)
             {
-                std::cout << "(" << *iter_id << ", " << *iter_fullname << ", " << *iter_password << ")" << std::endl;
-                iter_id++;
-                iter_fullname++;
-                iter_password++;
+                std::cout << "(" << response.id(i) << ", " << response.fullname(i) << ", " << response.password(i) << ")" << std::endl;
             }
             std::cout << std::endl;
         }
