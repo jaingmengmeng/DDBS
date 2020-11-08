@@ -142,43 +142,6 @@ struct temptable_users
     std::vector<std::string> passwords;
 };
 
-temptable_users execute_query(std::string ip, std::string query_str){
-    temptable_users rs;
-
-    int port=8000; 
-
-    brpc::Channel channel;
-
-    brpc::ChannelOptions options;
-    options.protocol = FLAGS_protocol;
-    options.connection_type = FLAGS_connection_type;
-    options.timeout_ms = FLAGS_timeout_ms;
-    options.max_retry = FLAGS_max_retry;
-
-    if(channel.Init(ip.c_str(), port, &options) != 0){
-        LOG(ERROR) << "Fail to initialize channel";
-        return rs;
-    }
-
-    QueryService_Stub stub(&channel);
-
-    QueryUsersRequest request;
-    QueryUsersResponse response;
-
-    brpc::Controller cntl;
-    request.add_query(query_str);
-    stub.QueryUsers(&cntl, &request, &response, NULL);
-    if(cntl.Failed()){
-        LOG(WARNING) << cntl.ErrorText();
-        return rs;
-    }
-
-    rs.ids.insert(rs.ids.cend(), response.id().cbegin(), response.id().cend());
-    rs.names.insert(rs.names.cend(), response.name().cbegin(), response.name().cend());
-    rs.fullnames.insert(rs.fullnames.cend(), response.fullname().cbegin(), response.fullname().cend());
-    rs.passwords.insert(rs.passwords.cbegin(), response.password().cbegin(), response.password().cend());
-    return rs;    
-}
 
 class UseFieldAsSubRequest : public brpc::CallMapper{
 public:
@@ -255,7 +218,7 @@ private:
 
 int main(int argc, char* argv[]){
 
-    GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
 
     // 1.get fragment info for db:table
     std::string db_name = "test";
