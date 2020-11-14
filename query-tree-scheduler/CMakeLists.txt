@@ -71,12 +71,6 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 find_package(OpenSSL)
 
 
-#add_executable(echo_client client.cpp ${PROTO_SRC} ${PROTO_HEADER})
-#add_executable(echo_server server.cpp ${PROTO_SRC} ${PROTO_HEADER})
-#add_executable(http_server http_server.cpp base64.cpp)
-
-#add_executable(client main.cpp base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
-#add_executable(server query.cpp ${PROTO_SRC} ${PROTO_HEADER})
 add_executable(query-loader src/load_query.cpp src/base64.cpp)
 add_executable(query-scheduler src/schedule_query.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
 add_executable(query-executer src/execute_query.cpp)
@@ -90,11 +84,7 @@ set(DYNAMIC_LIB
     dl
     )
 
-# target_link_libraries(echo_client ${BRPC_LIB} ${DYNAMIC_LIB})
-# target_link_libraries(echo_server ${BRPC_LIB} ${DYNAMIC_LIB})
-# target_link_libraries(http_server ${BRPC_LIB} ${DYNAMIC_LIB})
-#target_link_libraries(server ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
-#target_link_libraries(client ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
+
 target_link_libraries(query-loader ${BRPC_LIB} ${DYNAMIC_LIB})
 target_link_libraries(query-scheduler ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
 target_link_libraries(query-executer ${BRPC_LIB} ${DYNAMIC_LIB})
