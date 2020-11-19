@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.9.10)
-project(sql-handler C CXX)
+project(sql-processor C CXX)
 
 include(FindThreads)
 
