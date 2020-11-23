@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 2.9.10)
+project(sql-processor C CXX)
+
+include(FindThreads)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+
+# sql-parser
+set(CMAKE_PREFIX_PATH sql-parser/lib)
+find_library(SQL_PARSER_LIB NAMES libsqlparser.so)
+
+message(STATUS ${SQL_PARSER_LIB})
+
+include_directories(sql-parser/include)
+
+add_executable(test src/test.cpp)
+
+target_link_libraries(test ${SQL_PARSER_LIB})

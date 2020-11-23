@@ -10,7 +10,8 @@ int main(int argc, char *argv[]) {
     //     fprintf(stderr, "Usage: ./example \"SELECT * FROM test;\"\n");
     //     return -1;
     // }
-    std::string query = R"(select Customer.name, Book.title, Publisher.name, Orders.quantity from Customer, Book, Publisher, Orders where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Book.publisher_id=Publisher.id and Customer.id>308000 and Book.copies>100 and Orders.quantity>1 and Publisher.nation='PRC')";
+    std::string query = "select Customer.name, Book.title, Publisher.name, Orders.quantity from Customer, Book, Publisher, Orders where Customer.id=Orders.customer_id and Book.id=Orders.book_id and Book.publisher_id=Publisher.id and Customer.id>308000 and Book.copies>100 and Orders.quantity>1 and Publisher.nation='PRC'";
+    // std::string query = R"(SHOW DATABASES)";
 
     // parse a given query
     hsql::SQLParserResult result;
@@ -24,6 +25,7 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < result.size(); i++)
         {
             hsql::SQLStatement* stat = result.getStatements()[i];
+            hsql::printStatementInfo(stat);
             switch (stat->type())
             {
             case hsql::kStmtSelect:
