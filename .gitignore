@@ -94,6 +94,7 @@ fabric.properties
 
 # Compiled Dynamic libraries
 *.so
+!sql-processor/sql-parser/lib/libsqlparser.so
 *.dylib
 *.dll
 
@@ -131,4 +132,3 @@ CTestTestfile.cmake
 *.pb*
 
 /.idea
-
