@@ -3,11 +3,52 @@
 #include <string>
 #include <vector>
 
-#include "hsql/SQLParser.h"
-#include "hsql/util/sqlhelper.h"
+#include "sql-processor/SQLProcessor.h"
 
-void solve(std::string query) {
+void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c) {
+    std::string::size_type pos1, pos2;
+    pos2 = s.find(c);
+    pos1 = 0;
+    while(std::string::npos != pos2) {
+        v.push_back(s.substr(pos1, pos2-pos1));
+        pos1 = pos2 + c.size();
+        pos2 = s.find(c, pos1);
+    }
+    if(pos1 != s.length())
+        v.push_back(s.substr(pos1));
+}
+
+void solve_multi_query(std::string q) {
+    std::vector<std::string> query_list;
+    SplitString(q, query_list, ";");
+    for(int i=0; i<query_list.size(); ++i) {
+        std::string query = query_list[i];
+        std::cout << "[" << i << "] " << query << std::endl;
+        SQLProcessor p = SQLProcessor(query);
+        // hsql::SQLParserResult result;
+        // hsql::SQLParser::parseSQLString(query, &result);
+        // if (result.isValid()) {
+        //     hsql::SQLStatement* stat = result.getStatements()[0];
+        //     SQLProcessor sql_processor = SQLProcessor(stat);
+        //     sql_processor.solve();
+        // } else {
+        //     std::cout << query_error << " " << result.errorMsg() << std::endl;
+        // }
+    }
+}
+
+void solve_single_query(std::string query) {
     std::cout << query << std::endl;
+    SQLProcessor p = SQLProcessor(query);
+    // hsql::SQLParserResult result;
+    // hsql::SQLParser::parseSQLString(query, &result);
+    // if (result.isValid()) {
+    //     hsql::SQLStatement* stat = result.getStatements()[0];
+    //     SQLProcessor sql_processor = SQLProcessor(stat);
+    //     sql_processor.solve();
+    // } else {
+    //     std::cout << query_error << result.errorMsg() << std::endl;
+    // }
 }
 
 int main(int argc, char *argv[]) {
@@ -20,7 +61,7 @@ int main(int argc, char *argv[]) {
     // [TODO] help statement
     std::string help = "Usage: 1) `./main`    2) `./main <filename>`";
     std::string file_error = "Error opening file. Please check your filename.";
-    std::string query_error = "";
+    std::string query_error = "The SQL string is invalid!";
 
     std::string query = "";
     std::string str = "";
@@ -46,7 +87,7 @@ int main(int argc, char *argv[]) {
             }
             if(str[str.size()-1] == ';') {
                 // [TODO] process the query statements
-                solve(query);
+                solve_single_query(query);
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
@@ -63,7 +104,7 @@ int main(int argc, char *argv[]) {
                 query += str;
                 if(str[str.size()-1] == ';') {
                     // [TODO] process the query statements
-                    solve(query);
+                    solve_single_query(query);
                     // initial variables
                     query = "";
                     // std::cout << system+"> ";

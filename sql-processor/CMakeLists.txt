@@ -1,18 +1,21 @@
 cmake_minimum_required(VERSION 2.9.10)
 set(CMAKE_CXX_STANDARD 11)
-project(sql-processor C CXX)
-
-include(FindThreads)
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
+project(SQLProcessor C CXX)
 
 # sql-parser
-set(CMAKE_PREFIX_PATH ../../third-party/sql-parser/lib)
+set(CMAKE_PREFIX_PATH sql-parser/lib)
 find_library(SQL_PARSER_LIB NAMES libsqlparser.so)
+message(STATUS ${SQL_PARSER_LIB})
 
-include_directories(../../third-party/sql-parser/include)
+# 查找当前目录下的所有源文件, 并将名称保存到 DIR_LIB_SRCS 变量
+aux_source_directory(. DIR_LIB_SRCS)
 
-add_executable(test src/test.cpp)
+# 指定生成 SQLProcessor 链接库
+add_library(SQLProcessor ${DIR_LIB_SRCS})
 
-target_link_libraries(test ${SQL_PARSER_LIB})
+# 将目标文件 SQLProcessor 与第三方库文件 SQL-Parser 进行链接
+target_link_libraries(SQLProcessor ${SQL_PARSER_LIB})
+
+# 不用引用头文件，直接在程序中用相对路径引用头文件即可
+# include_directories(sql-parse/include)
+# target_include_directories(SQLProcessor PUBLIC sql-parse/include)
