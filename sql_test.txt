@@ -1,3 +1,4 @@
 INSERT INTO students VALUES ('Max', 1112233, 'Musterhausen', 2.3);
 DELETE FROM table1 where id=1;
 select * from table1;
+show tables;
