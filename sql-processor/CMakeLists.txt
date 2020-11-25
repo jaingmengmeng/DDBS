@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 11)
 project(SQLProcessor C CXX)
 
 # sql-parser
-set(CMAKE_PREFIX_PATH sql-parser/lib)
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/sql-parser/lib)
 find_library(SQL_PARSER_LIB NAMES libsqlparser.so)
 message(STATUS ${SQL_PARSER_LIB})
 
@@ -16,6 +16,8 @@ add_library(SQLProcessor ${DIR_LIB_SRCS})
 # 将目标文件 SQLProcessor 与第三方库文件 SQL-Parser 进行链接
 target_link_libraries(SQLProcessor ${SQL_PARSER_LIB})
 
-# 不用引用头文件，直接在程序中用相对路径引用头文件即可
-# include_directories(sql-parse/include)
-# target_include_directories(SQLProcessor PUBLIC sql-parse/include)
+# 子项目不用设置头文件的目录，直接在程序中用相对路径引用头文件即可
+# set(SQL_PARSER_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/sql-parse/include)
+# message(STATUS ${SQL_PARSER_INCLUDE})
+# include_directories(${SQL_PARSER_INCLUDE})
+# target_include_directories(SQLProcessor PRIVATE ${SQL_PARSER_INCLUDE})

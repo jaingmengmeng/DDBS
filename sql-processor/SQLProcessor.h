@@ -4,8 +4,10 @@
 #include <vector>
 #include <string>
 
-#include "sql-parser/include/hsql/SQLParser.h"
-#include "sql-parser/include/hsql/util/sqlhelper.h"
+#include "../../third-party/sql-parser/include/hsql/SQLParser.h"
+#include "../../third-party/sql-parser/include/hsql/util/sqlhelper.h"
+// #include "hsql/SQLParser.h"
+// #include "hsql/util/sqlhelper.h"
 
 class SQLProcessor {
 private:
