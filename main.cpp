@@ -82,6 +82,13 @@ int main(int argc, char *argv[]) {
                 std::cout << system+"> ";
                 continue;
             }
+            if(query == "show tables") {
+                data_loader.show_tables();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+                continue;
+            }
             if(query == "help") {
                 std::cout << help << std::endl;
                 // initial variables

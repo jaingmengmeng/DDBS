@@ -72,6 +72,10 @@ SQLProcessor::SQLProcessor(std::string q) {
             case hsql::kStmtDelete:
                 std::cout << "delete" << std::endl;
                 break;
+            // show statement. eg. show tables;
+            // case hsql::kStmtShow:
+            //     std::cout << "show" << std::endl;
+            //     break;
             default:
                 std::cout << "Now the system only supports insert, select and delete." << std::endl;
                 break;

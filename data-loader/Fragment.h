@@ -7,6 +7,8 @@
 #include "Predicate.h"
 
 class Fragment {
+private:
+    friend std::ostream& operator<<(std::ostream& os, Fragment f);
 public:
     std::string rname; //relation name
     std::string fname; //e.g.cus1 cus2 ord1 ord2 ord3 ord4 pub1 ...
@@ -14,6 +16,9 @@ public:
     bool is_horizontal;
     std::vector<std::string> vf_condition; //e.g. customer_id customer_name
     std::vector<Predicate> hf_condition;
+
+    Fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<std::string> vf_condition);
+    Fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<Predicate> hf_condition);
 };
 
 #endif

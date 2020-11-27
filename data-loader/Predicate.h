@@ -3,8 +3,11 @@
 
 #include <vector>
 #include <string>
+#include <sstream>
 
 class Predicate {
+private:
+    friend std::ostream& operator<<(std::ostream& os, Predicate p);
 public:
     int op_type; //1:>= 2:<= 3:> 4:< 5:=(num) 6:=(string) 7:join
     std::string aname; // Name of attribute e.g.customer_rank
