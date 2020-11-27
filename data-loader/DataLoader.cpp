@@ -175,7 +175,7 @@ void DataLoader::load_data() {
                 vv_str.push_back(v_str);
             }
             std::string insert_str = Convert2Insert(relation, vv_str);
-            std::cout << insert_str << std::endl;
+            // std::cout << insert_str << std::endl;
         } else {
             std::cout << file_error << std::endl;
             exit(1);
