@@ -37,7 +37,7 @@ DataLoader::DataLoader() {
 
     Orders->add_attribute(std::string("customer_id"), true, 1, 1, std::vector<double>{300001, 315000});
     Orders->add_attribute(std::string("book_id"), true, 1, 1, std::vector<double>{200001, 250000});
-    Orders->add_attribute(std::string("quantity"), true, 1, 3, std::vector<double>{3, 2});
+    Orders->add_attribute(std::string("quantity"), false, 1, 3, std::vector<double>{3, 2});
     // std::cout << *Orders << std::endl;
 
     Publisher->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{100001, 105000});
