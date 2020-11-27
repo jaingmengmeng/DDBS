@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <map>
+#include <fstream>
 
 #include "Relation.h"
 
@@ -16,6 +18,7 @@ public:
     DataLoader();
     void init();
     void show_tables();
+    void load_data();
 };
 
 #endif

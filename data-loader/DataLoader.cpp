@@ -4,7 +4,7 @@ DataLoader::DataLoader() {
     // initialize file_path;
     this->files[std::string("Book")] = std::string("../files/data/book.tsv");
     this->files[std::string("Customer")] = std::string("../files/data/customer.tsv");
-    this->files[std::string("Orders")] = std::string("../files/data/orders.tsv");
+    this->files[std::string("Orders")] = std::string("../files/data/order.tsv");
     this->files[std::string("Publisher")] = std::string("../files/data/publisher.tsv");
     this->sites.push_back(std::string("site1"));
     this->sites.push_back(std::string("site2"));
@@ -109,5 +109,76 @@ void DataLoader::show_tables() {
     for(auto relation : this->relations) {
         std::cout << *relation;
         relation->print_fragments();
+    }
+}
+
+std::vector<std::string> tsv_split(const std::string& s, const std::string& c) {
+    std::vector<std::string> v;
+    v.clear();
+    std::string::size_type pos1, pos2;
+    pos2 = s.find(c);
+    pos1 = 0;
+    while(std::string::npos != pos2) {
+        v.push_back(s.substr(pos1, pos2-pos1));
+        pos1 = pos2 + c.size();
+        pos2 = s.find(c, pos1);
+    }
+    if(pos1 != s.length())
+        v.push_back(s.substr(pos1));
+    return v;
+}
+
+std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string> > v) {
+    std::string res = std::string("INSERT INTO ");
+    res += r->rname;
+    res += std::string("(");
+    for(int i=0; i<r->attributes.size(); ++i) {
+        if(i > 0) {
+            res += std::string(", ");
+        }
+        res += r->attributes[i].aname;
+    }
+    res += std::string(") VALUES ");
+    for(int i=0; i<v.size(); ++i) {
+        if(i > 0) {
+            res += std::string(", ");
+        }
+        res += std::string("(");
+        for(int j=0; j<v[i].size(); ++j) {
+            if(j > 0) {
+                res += std::string(", ");
+            }
+            if(r->attributes[j].type == 1) {
+                res += v[i][j];
+            } else if(r->attributes[j].type == 2) {
+                res += std::string("'");
+                res += v[i][j];
+                res += std::string("'");
+            }
+        }
+        res += std::string(")");
+    }
+    res += std::string(";");
+    return res;
+}
+
+void DataLoader::load_data() {
+    std::string file_error = std::string("Error opening file. Please check your filename.");
+    for(auto relation : this->relations) {
+        std::string file_path = this->files[relation->rname];
+        std::ifstream fin(file_path, std::ios_base::in);
+        std::string str;
+        if (fin.is_open()) {
+            std::vector<std::vector<std::string> > vv_str;
+            while(std::getline(fin, str)) {
+                std::vector<std::string> v_str = tsv_split(str, std::string("\t"));
+                vv_str.push_back(v_str);
+            }
+            std::string insert_str = Convert2Insert(relation, vv_str);
+            std::cout << insert_str << std::endl;
+        } else {
+            std::cout << file_error << std::endl;
+            exit(1);
+        }
     }
 }

@@ -5,7 +5,7 @@ project(SQLProcessor C CXX)
 # sql-parser
 set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/sql-parser/lib)
 find_library(SQL_PARSER_LIB NAMES libsqlparser.so)
-message(STATUS ${SQL_PARSER_LIB})
+# message(STATUS ${SQL_PARSER_LIB})
 
 # 查找当前目录下的所有源文件, 并将名称保存到 DIR_LIB_SRCS 变量
 aux_source_directory(. DIR_LIB_SRCS)
