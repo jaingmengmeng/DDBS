@@ -5,6 +5,10 @@ project(main C CXX)
 # 添加 sql-processor 子目录
 add_subdirectory(sql-processor)
 
+# 添加 data-loader 子目录
+add_subdirectory(data-loader)
+
 add_executable(main main.cpp)
 
 target_link_libraries(main SQLProcessor)
+target_link_libraries(main DataLoader)

@@ -2,8 +2,10 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "sql-processor/SQLProcessor.h"
+#include "data-loader/DataLoader.h"
 
 void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c) {
     std::string::size_type pos1, pos2;
@@ -24,31 +26,23 @@ void solve_multi_query(std::string q) {
     for(int i=0; i<query_list.size(); ++i) {
         std::string query = query_list[i];
         std::cout << "[" << i << "] " << query << std::endl;
-        SQLProcessor p = SQLProcessor(query);
-        // hsql::SQLParserResult result;
-        // hsql::SQLParser::parseSQLString(query, &result);
-        // if (result.isValid()) {
-        //     hsql::SQLStatement* stat = result.getStatements()[0];
-        //     SQLProcessor sql_processor = SQLProcessor(stat);
-        //     sql_processor.solve();
-        // } else {
-        //     std::cout << query_error << " " << result.errorMsg() << std::endl;
-        // }
+        SQLProcessor processor = SQLProcessor(query);
+        if (processor.isValid()) {
+            
+        } else {
+            std::cout << processor.errorMsg() << std::endl;
+        }
     }
 }
 
 void solve_single_query(std::string query) {
     std::cout << query << std::endl;
-    SQLProcessor p = SQLProcessor(query);
-    // hsql::SQLParserResult result;
-    // hsql::SQLParser::parseSQLString(query, &result);
-    // if (result.isValid()) {
-    //     hsql::SQLStatement* stat = result.getStatements()[0];
-    //     SQLProcessor sql_processor = SQLProcessor(stat);
-    //     sql_processor.solve();
-    // } else {
-    //     std::cout << query_error << result.errorMsg() << std::endl;
-    // }
+    SQLProcessor processor = SQLProcessor(query);
+    if (processor.isValid()) {
+        
+    } else {
+        std::cout << processor.errorMsg() << std::endl;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -66,6 +60,8 @@ int main(int argc, char *argv[]) {
     std::string query = "";
     std::string str = "";
 
+    DataLoader data_loader = DataLoader();
+
     // read sql query from std input
     if(argc == 1) {
         std::cout << logo << std::endl << start << std::endl;
@@ -74,9 +70,17 @@ int main(int argc, char *argv[]) {
             if(query != "")
                 query += " ";
             query += str;
+            // transform(query.begin(), query.end(), query.begin(), ::tolower);
             if(query == "quit" || query == "exit") {
                 std::cout << bye << std::endl;
                 return 0;
+            }
+            if(query == "init") {
+                data_loader.init();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+                continue;
             }
             if(query == "help") {
                 std::cout << help << std::endl;
