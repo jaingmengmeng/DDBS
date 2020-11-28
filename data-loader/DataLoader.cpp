@@ -128,17 +128,30 @@ std::vector<std::string> tsv_split(const std::string& s, const std::string& c) {
     return v;
 }
 
-std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string> > v) {
+std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string> > v, std::string sname) {
     std::string res = std::string("");
     if(v.size() == 0) return res;
     res += std::string("INSERT INTO ");
     res += r->rname;
     res += std::string("(");
-    for(int i=0; i<r->attributes.size(); ++i) {
-        if(i > 0) {
-            res += std::string(", ");
+    if(r->is_horizontal) {
+        for(int i=0; i<r->attributes.size(); ++i) {
+            if(i > 0) {
+                res += std::string(", ");
+            }
+            res += r->attributes[i].aname;
         }
-        res += r->attributes[i].aname;
+    } else {
+        for(auto fragment : r->frags) {
+            if(fragment.sname == sname) {
+                for(int i=0; i<fragment.vf_condition.size(); ++i) {
+                    if(i > 0) {
+                        res += std::string(", ");
+                    }
+                    res += fragment.vf_condition[i];
+                }
+            }
+        }
     }
     res += std::string(") VALUES ");
     for(int i=0; i<v.size(); ++i) {
@@ -251,7 +264,7 @@ void DataLoader::load_data() {
             std::map<std::string, std::vector<std::vector<std::string>>> allocated_data_map = this->data_fragment(relation, vv_str);
             std::vector<std::string> insert_str;
             for(auto sname : this->sites) {
-                std::string insert = Convert2Insert(relation, allocated_data_map[sname]);
+                std::string insert = Convert2Insert(relation, allocated_data_map[sname], sname);
                 if(insert != std::string("")) {
                     insert_str.push_back(insert);
                     std::ofstream fout(sname+"_data_loader.sql", std::ios::app);
