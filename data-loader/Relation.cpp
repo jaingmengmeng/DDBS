@@ -2,6 +2,8 @@
 
 Relation::Relation(std::string rname) : rname(rname) {}
 
+Relation::Relation(std::string rname, bool is_horizontal) : rname(rname), is_horizontal(is_horizontal) {}
+
 std::ostream& operator<<(std::ostream& os, Relation r) {
     os << r.rname << std::string("(");
     // for(auto attribute : r.attributes) {

@@ -19,6 +19,7 @@ public:
     std::vector<Fragment> frags;
 
     Relation(std::string rname);
+    Relation(std::string rname, bool is_horizontal);
     void add_attribute(Attribute a);
     void add_attribute(std::string aname, bool is_key, int type);
     void add_attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value);
