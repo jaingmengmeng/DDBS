@@ -18,7 +18,7 @@ public:
     DataLoader();
     void init();
     void show_tables();
-    void load_data();
+    std::map<std::string, std::vector<std::string>> load_data();
     std::map<std::string, std::vector<std::vector<std::string>>> data_fragment(Relation* relation, std::vector<std::vector<std::string>> data);
 };
 

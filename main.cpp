@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if(query == "load data") {
-                data_loader.load_data();
+                std::map<std::string, std::vector<std::string>> insert = data_loader.load_data();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";

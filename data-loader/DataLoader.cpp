@@ -128,9 +128,9 @@ std::vector<std::string> tsv_split(const std::string& s, const std::string& c) {
     return v;
 }
 
-std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string> > v, std::string sname) {
+std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string>> datas, std::string sname) {
     std::string res = std::string("");
-    if(v.size() == 0) return res;
+    if(datas.size() == 0) return res;
     res += std::string("INSERT INTO ");
     res += r->rname;
     res += std::string("(");
@@ -154,20 +154,20 @@ std::string Convert2Insert(Relation* r, std::vector<std::vector<std::string> > v
         }
     }
     res += std::string(") VALUES ");
-    for(int i=0; i<v.size(); ++i) {
+    for(int i=0; i<datas.size(); ++i) {
         if(i > 0) {
             res += std::string(", ");
         }
         res += std::string("(");
-        for(int j=0; j<v[i].size(); ++j) {
+        for(int j=0; j<datas[i].size(); ++j) {
             if(j > 0) {
                 res += std::string(", ");
             }
             if(r->attributes[j].type == 1) {
-                res += v[i][j];
+                res += datas[i][j];
             } else if(r->attributes[j].type == 2) {
                 res += std::string("'");
-                res += v[i][j];
+                res += datas[i][j];
                 res += std::string("'");
             }
         }
@@ -225,8 +225,9 @@ std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fr
                         }
                     }
                 }
-                if(result.size() == fragment.hf_condition.size())
+                if(result.size() == fragment.hf_condition.size()) {
                     allocated_data_map[fragment.sname].push_back(data);
+                }
             }
         }
     } else {
@@ -247,8 +248,9 @@ std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fr
     return allocated_data_map;
 }
 
-void DataLoader::load_data() {
+std::map<std::string, std::vector<std::string>> DataLoader::load_data() {
     std::string file_error = std::string("Error opening file. Please check your filename.");
+    std::map<std::string, std::vector<std::string>> fragmented_data;
     for(auto relation : this->relations) {
         std::string file_path = this->files[relation->rname];
         std::ifstream fin(file_path, std::ios_base::in);
@@ -260,16 +262,16 @@ void DataLoader::load_data() {
                 std::vector<std::string> v_str = tsv_split(str, std::string("\t"));
                 vv_str.push_back(v_str);
             }
+            relation->set_num_of_recs(vv_str.size());
             // 根据分片信息将所有数据进行分到不同的site上
             std::map<std::string, std::vector<std::vector<std::string>>> allocated_data_map = this->data_fragment(relation, vv_str);
-            std::vector<std::string> insert_str;
             for(auto sname : this->sites) {
                 std::string insert = Convert2Insert(relation, allocated_data_map[sname], sname);
                 if(insert != std::string("")) {
-                    insert_str.push_back(insert);
-                    std::ofstream fout(sname+"_data_loader.sql", std::ios::app);
-                    fout << insert << std::endl;
-                    fout.close();
+                    fragmented_data[sname].push_back(insert);
+                    // std::ofstream fout(sname+"_data_loader.sql", std::ios::app);
+                    // fout << insert << std::endl;
+                    // fout.close();
                 }
             }
         } else {
@@ -277,4 +279,5 @@ void DataLoader::load_data() {
             exit(1);
         }
     }
+    return fragmented_data;
 }

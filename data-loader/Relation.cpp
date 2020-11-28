@@ -1,20 +1,22 @@
 #include "Relation.h"
 
-Relation::Relation(std::string rname) : rname(rname) {}
-
-Relation::Relation(std::string rname, bool is_horizontal) : rname(rname), is_horizontal(is_horizontal) {}
+Relation::Relation(std::string rname, bool is_horizontal=true) :
+rname(rname), is_horizontal(is_horizontal) {
+    this->num_of_recs = 0;
+}
 
 std::ostream& operator<<(std::ostream& os, Relation r) {
     os << r.rname << std::string("(");
-    // for(auto attribute : r.attributes) {
-    //     os << attribute << std::string(",");
-    // }
     for(int i=0; i<r.attributes.size(); ++i) {
         if(i > 0)
             os << std::string(", ");
         os << r.attributes[i];
     }
-    os << std::string(")\n");
+    os << std::string(") ");
+    if(r.num_of_recs > 0) {
+        os << r.num_of_recs;
+    }
+    os << std::string("\n");
     return os;
 }
 
@@ -50,4 +52,8 @@ void Relation::print_fragments() {
     for(auto fragment : this->frags) {
         std::cout << fragment << std::endl;
     }
+}
+
+void Relation::set_num_of_recs(int n) {
+    this->num_of_recs = n;
 }

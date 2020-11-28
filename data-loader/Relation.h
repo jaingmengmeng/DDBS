@@ -18,7 +18,6 @@ public:
     std::vector<Attribute> attributes;
     std::vector<Fragment> frags;
 
-    Relation(std::string rname);
     Relation(std::string rname, bool is_horizontal);
     void add_attribute(Attribute a);
     void add_attribute(std::string aname, bool is_key, int type);
@@ -28,6 +27,8 @@ public:
     void add_fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<std::string> vf_condition);
     void add_fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<Predicate> hf_condition);
     void print_fragments();
+
+    void set_num_of_recs(int n);
 };
 
 #endif
