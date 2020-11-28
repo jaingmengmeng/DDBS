@@ -504,7 +504,7 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     }
                     latencies.emplace_back(sub_cntl.sub(i)->latency_us());
                     if (sub_cntl.sub(i)->local_side().ip != sub_cntl.sub(i)->remote_side().ip){
-                        communication_costs.emplace_back(sub_cntl.sub(i)->response()->ByteSizeLong());
+                        communication_costs.emplace_back(sub_cntl.sub(i)->response()->ByteSize());
                     } else{
                         communication_costs.emplace_back(0L);
                     }
