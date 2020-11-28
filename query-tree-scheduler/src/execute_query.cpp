@@ -12,7 +12,7 @@ DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:8000", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
-DEFINE_int32(timeout_ms, 100, "RPC timeout in milliseconds");
+DEFINE_int32(timeout_ms, 1000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_int32(interval_ms, 1000, "Milliseconds between consecutive requests");
 
@@ -82,10 +82,15 @@ int load_table(std::string host, std::string table_name, std::string attr_meta, 
             request.add_attr_values(attr_value);
         }
 
-        google::protobuf::Closure* done = brpc::NewCallback(
-                &HandleLoadTableResponse, cntl, response);
+//        google::protobuf::Closure* done = brpc::NewCallback(&HandleLoadTableResponse, cntl, response);
 
-        stub.LoadTable(cntl, &request, response, done);
+        stub.LoadTable(cntl, &request, response, nullptr);
+        if (cntl->Failed()) {
+            LOG(WARNING) << "Some site was down, " << cntl->ErrorText();
+            return -1;
+        }
+        LOG(INFO) << "Received response from " << cntl->remote_side() << "\nLatency(us): " << cntl->latency_us();
+        LOG(INFO) << "Result: " << response->result();
     }
 
     return 0;
@@ -137,12 +142,12 @@ int main(int argc, char* argv[]){
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
     std::string host = "127.0.0.1:8000";
-    std::string table_name = "test";
-    std::string attr_meta = "id int, name varchar";
+    std::string table_name = "test1";
+    std::string attr_meta = "`id` int(11) not null, `name` varchar(20) not null";
     std::vector<std::string> attr_values;
-    attr_values.emplace_back("1, a");
-    attr_values.emplace_back("2, b");
-    attr_values.emplace_back("3, c");
+    attr_values.emplace_back("1, 'a'");
+    attr_values.emplace_back("2, 'b'");
+    attr_values.emplace_back("3, 'c'");
 
     return load_table(host, table_name, attr_meta, attr_values);
 }

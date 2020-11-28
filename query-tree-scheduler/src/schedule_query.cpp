@@ -80,11 +80,21 @@ bool execute_non_query_sql(const std::string &sql) {
     driver = sql::mysql::get_driver_instance();
     conn = driver->connect("127.0.0.1", "root", "123456");
     stat = conn->createStatement();
-    stat->execute("use " + DB_NAME + ";");
-    bool result = stat->execute(sql);
-    stat->close();
-    conn->close();
-    return result;
+
+    LOG(INFO) << "execute sql: " << sql;
+
+    try {
+        stat->execute("create database if not exists " + DB_NAME + ";");
+        stat->execute("use " + DB_NAME + ";");
+        bool result = stat->execute(sql);
+        stat->close();
+        conn->close();
+        return result;
+    } catch (sql::SQLException& exception) {
+        LOG(ERROR) << exception.what();
+        return -1;
+    }
+
 }
 
 int execute_query_sql(const std::string& sql, const std::string& table_name, TableResponse* response, const std::string& temp_table_type){
@@ -97,41 +107,49 @@ int execute_query_sql(const std::string& sql, const std::string& table_name, Tab
     conn = driver->connect("127.0.0.1", "root", "123456");
     stat = conn->createStatement();
 
-    stat->execute("use " + DB_NAME + ";");
-    rs = stat->executeQuery(sql);
-    sql::ResultSetMetaData *rsm = rs->getMetaData();
-    int count = rsm->getColumnCount();
-    if (count > 0) {
-        std::vector<std::string> column_names;
-        std::string attr_meta;
-        // 1.leaf -- add table_name prefix
-        if (temp_table_type == LEAF){
-            attr_meta = ("`" + table_name + "_" + rsm->getColumnName(1) + "` " +
-                                     rsm->getColumnTypeName(1));
-            for (int i = 2; i <= count; i++) {
-                attr_meta += (", `" + table_name + "_" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
-                column_names.push_back(rsm->getColumnName(i));
+    LOG(INFO) << "execute sql: " << sql;
+    try {
+        stat->execute("create database if not exists " + DB_NAME + ";");
+        stat->execute("use " + DB_NAME + ";");
+        rs = stat->executeQuery(sql);
+        sql::ResultSetMetaData *rsm = rs->getMetaData();
+        int count = rsm->getColumnCount();
+        if (count > 0) {
+            std::vector<std::string> column_names;
+            std::string attr_meta;
+            // 1.leaf -- add table_name prefix
+            if (temp_table_type == LEAF) {
+                attr_meta = ("`" + table_name + "_" + rsm->getColumnName(1) + "` " +
+                             rsm->getColumnTypeName(1));
+                for (int i = 2; i <= count; i++) {
+                    attr_meta += (", `" + table_name + "_" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
+                    column_names.push_back(rsm->getColumnName(i));
+                }
+            }
+                // 2.non-leaf
+            else {
+                attr_meta = ("`" + rsm->getColumnName(1) + "` " +
+                             rsm->getColumnTypeName(1));
+                for (int i = 2; i <= count; i++) {
+                    attr_meta += (", `" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
+                    column_names.push_back(rsm->getColumnName(i));
+                }
+            }
+            response->set_attr_meta(attr_meta);
+            while (rs->next()) {
+                std::string row;
+                for (const std::string &column_name : column_names) {
+                    row += rs->getString(column_name) + ",";
+                }
+                response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
-        // 2.non-leaf
-        else{
-            attr_meta = ("`" + rsm->getColumnName(1) + "` " +
-                                     rsm->getColumnTypeName(1));
-            for (int i = 2; i <= count; i++) {
-                attr_meta += (", `" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
-                column_names.push_back(rsm->getColumnName(i));
-            }
-        }
-        response->set_attr_meta(attr_meta);
-        while (rs->next()) {
-            std::string row;
-            for (const std::string &column_name : column_names) {
-                row += rs->getString(column_name) + ",";
-            }
-            response->add_attr_values(row.substr(0, row.length() - 1));
-        }
+        return count;
+    } catch (sql::SQLException& exception) {
+        LOG(ERROR) << exception.what();
+        return 0;
     }
-    return count;
+
 }
 
 void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_table_names, std::vector<long> latencies, std::vector<long> communication_costs){
