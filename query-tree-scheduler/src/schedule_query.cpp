@@ -8,7 +8,6 @@
 #include "base64.h"
 
 #include <iterator>
-#include <regex>
 #include <utility>
 
 #include <mysql_connection.h>
@@ -90,14 +89,15 @@ bool execute_non_query_sql(const std::string &sql) {
         stat->close();
         conn->close();
         return result;
-    } catch (sql::SQLException& exception) {
+    } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
         return -1;
     }
 
 }
 
-int execute_query_sql(const std::string& sql, const std::string& table_name, TableResponse* response, const std::string& temp_table_type){
+int execute_query_sql(const std::string &sql, const std::string &table_name, TableResponse *response,
+                      const std::string &temp_table_type) {
     sql::mysql::MySQL_Driver *driver;
     sql::Connection *conn;
     sql::Statement *stat;
@@ -145,14 +145,15 @@ int execute_query_sql(const std::string& sql, const std::string& table_name, Tab
             }
         }
         return count;
-    } catch (sql::SQLException& exception) {
+    } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
         return 0;
     }
 
 }
 
-void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_table_names, std::vector<long> latencies, std::vector<long> communication_costs){
+void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_table_names, std::vector<long> latencies,
+                                               std::vector<long> communication_costs) {
     // 1.prepare channel
     brpc::Channel channel;
     brpc::ChannelOptions options;
@@ -160,7 +161,7 @@ void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_tab
     options.timeout_ms = FLAGS_timeout_ms;
     options.max_retry = FLAGS_max_retry;
 
-    if (channel.Init(ETCD_PUT_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+    if (channel.Init(ETCD_PUT_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
         LOG(ERROR) << "Fail to initialize channel when writing query processing statistics!";
         return;
     }
@@ -179,7 +180,7 @@ void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_tab
         cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
         cntl.request_attachment().append(j.dump());
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
-        if(cntl.Failed()){
+        if (cntl.Failed()) {
             LOG(ERROR) << cntl.ErrorText() << std::endl;
             //return -1;
         }
@@ -195,13 +196,14 @@ void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_tab
         cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
         cntl.request_attachment().append(j.dump());
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
-        if(cntl.Failed()){
+        if (cntl.Failed()) {
             LOG(ERROR) << cntl.ErrorText() << std::endl;
             //return -1;
         }
         cntl.Reset();
     }
 }
+
 std::string get_range_end_for_prefix(std::string s) {
     for (int i = 0; i < s.length(); i++) {
         if (s[i] < 0xff) {
@@ -235,15 +237,29 @@ nlohmann::json read_from_etcd(brpc::Channel *channel, brpc::Controller *cntl, co
     return j;
 }
 
-std::vector<std::string> s_split(const std::string &in, const std::string &delim) {
-    std::regex re{delim};
-    return std::vector<std::string>{
-            std::sregex_token_iterator(in.begin(), in.end(), re, -1),
-            std::sregex_token_iterator()
-    };
+//std::vector<std::string> s_split(const std::string &in, const std::string &delim) {
+//    std::regex re{delim};
+//    return std::vector<std::string>{
+//            std::sregex_token_iterator(in.begin(), in.end(), re, -1),
+//            std::sregex_token_iterator()
+//    };
+//}
+
+void split_string(const std::string &s, std::vector<std::string> &v, const std::string &c) {
+    std::string::size_type pos1, pos2;
+    pos2 = s.find(c);
+    pos1 = 0;
+    while (std::string::npos != pos2) {
+        v.push_back(s.substr(pos1, pos2 - pos1));
+
+        pos1 = pos2 + c.size();
+        pos2 = s.find(c, pos1);
+    }
+    if (pos1 != s.length())
+        v.push_back(s.substr(pos1));
 }
 
-temp_table & read_temp_table_meta(const std::string &temp_table_name) {
+temp_table &read_temp_table_meta(const std::string &temp_table_name) {
     temp_table tb;
     tb.ret_code = -1;
     tb.is_union = false;
@@ -328,7 +344,8 @@ temp_table & read_temp_table_meta(const std::string &temp_table_name) {
         return tb;
     }
     temp = j["kvs"][0]["value"];
-    std::vector<std::string> cs = s_split(base64_decode(temp), OUTER_SEPERATOR);
+    std::vector<std::string> cs;
+    split_string(base64_decode(temp), cs, OUTER_SEPERATOR);
     for (auto s : cs) {
         int index = s.find(INNER_SEPERATOR, 0);
         std::string temp_table_name = s.substr(0, index);
@@ -342,7 +359,7 @@ temp_table & read_temp_table_meta(const std::string &temp_table_name) {
 
 class MyCallMapper : public brpc::CallMapper {
 public:
-    MyCallMapper(std::string mTempTableName) : m_temp_table_name(std::move(mTempTableName)){}
+    MyCallMapper(std::string mTempTableName) : m_temp_table_name(std::move(mTempTableName)) {}
 
 public:
     brpc::SubCall
@@ -360,7 +377,7 @@ private:
 class MyResponseMerger : public brpc::ResponseMerger {
 public:
     MyResponseMerger(bool mIsUnion, std::string mTempTableName) : m_is_union(mIsUnion),
-                                                                         m_temp_table_name(std::move(mTempTableName)) {}
+                                                                  m_temp_table_name(std::move(mTempTableName)) {}
 
 public:
     Result Merge(google::protobuf::Message *response, const google::protobuf::Message *sub_response) override {
@@ -427,26 +444,26 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
     // 2.for leaf -> executing sql
     if (tb.type == LEAF) {
         std::string table_name = tb.children.cbegin()->first;
-        if (tb.project_expr.empty()){
+        if (tb.project_expr.empty()) {
             tb.project_expr = "*";
         }
         std::string sql = "select " + tb.project_expr + " from " + table_name;
-        if (!tb.select_expr.empty()){
-            sql +=  " where " + tb.select_expr;
+        if (!tb.select_expr.empty()) {
+            sql += " where " + tb.select_expr;
         }
         sql += ";";
         int count = execute_query_sql(sql, table_name, response, LEAF);
-        if (count <= 0){
+        if (count <= 0) {
             cntl->SetFailed("empty result for sql: " + sql);
         }
         return;
     }
         // 3.for non-leaf -> cascading rpc request(parallel channel)
-    else{
+    else {
         brpc::ParallelChannel channel;
         brpc::ParallelChannelOptions pchan_options;
         pchan_options.timeout_ms = FLAGS_timeout_ms;
-        if(channel.Init(&pchan_options) != 0){
+        if (channel.Init(&pchan_options) != 0) {
             LOG(ERROR) << "Fail to init ParallelChannel!";
             cntl->SetFailed("Fail to init ParallelChannel for child requests!");
             return;
@@ -459,43 +476,41 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
         // 3.1 request table from children
         std::string first_child_temp_table_name = tb.children.cbegin()->first;
         std::vector<std::string> child_temp_table_names;
-        for(auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++){
+        for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
             child_temp_table_names.emplace_back(iter->first);
-            MyCallMapper* mapper = new MyCallMapper(iter->first);
-            MyResponseMerger* merger = new MyResponseMerger(tb.is_union, iter->first);
-            brpc::Channel* sub_channel = new brpc::Channel;
+            MyCallMapper *mapper = new MyCallMapper(iter->first);
+            MyResponseMerger *merger = new MyResponseMerger(tb.is_union, iter->first);
+            brpc::Channel *sub_channel = new brpc::Channel;
             std::string server_addr = iter->second + ":8000";
-            if(sub_channel->Init(server_addr.c_str(), &sub_options) != 0){
+            if (sub_channel->Init(server_addr.c_str(), &sub_options) != 0) {
                 LOG(ERROR) << "Fail to initialize sub_channel for " << server_addr;
                 cntl->SetFailed("Fail to initialize sub_channel for " + server_addr);
                 return;
             }
-            if(channel.AddChannel(sub_channel, brpc::OWNS_CHANNEL, mapper, merger) != 0){
+            if (channel.AddChannel(sub_channel, brpc::OWNS_CHANNEL, mapper, merger) != 0) {
                 LOG(ERROR) << "Fail to add sub_channel for " << server_addr;
                 cntl->SetFailed("Fail to add sub_channel for " + server_addr);
                 return;
             }
         }
-        if (channel.channel_count() > 0){
+        if (channel.channel_count() > 0) {
             DDBService_Stub stub(&channel);
             TableRequest sub_request;
             TableResponse sub_response;
             brpc::Controller sub_cntl;
 
             stub.RequestTable(&sub_cntl, &sub_request, &sub_response, NULL);
-            if (!sub_cntl.Failed())
-            {
+            if (!sub_cntl.Failed()) {
                 // 3.1.1 write query processing statistics to etcd
                 std::vector<long> latencies;
                 std::vector<long> communication_costs;
-                for (int i = 0; i < sub_cntl.sub_count(); i++)
-                {
-                    if(!sub_cntl.sub(i)){
+                for (int i = 0; i < sub_cntl.sub_count(); i++) {
+                    if (!sub_cntl.sub(i)) {
                         LOG(ERROR) << "a controller was lost!";
                         cntl->SetFailed("a controller was lost!");
                         return;
                     }
-                    if(sub_cntl.sub(i)->Failed()){
+                    if (sub_cntl.sub(i)->Failed()) {
                         LOG(ERROR) << "rpc for channel " << sub_cntl.sub(i)->remote_side().ip << " Failed!";
                         LOG(ERROR) << sub_cntl.sub(i)->ErrorText();
                         std::string s = butil::ip2str(sub_cntl.sub(i)->remote_side().ip).c_str();
@@ -503,9 +518,9 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                         return;
                     }
                     latencies.emplace_back(sub_cntl.sub(i)->latency_us());
-                    if (sub_cntl.sub(i)->local_side().ip != sub_cntl.sub(i)->remote_side().ip){
+                    if (sub_cntl.sub(i)->local_side().ip != sub_cntl.sub(i)->remote_side().ip) {
                         communication_costs.emplace_back(sub_cntl.sub(i)->response()->ByteSize());
-                    } else{
+                    } else {
                         communication_costs.emplace_back(0L);
                     }
                 }
@@ -513,21 +528,23 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
 
                 // 3.2 handle children response
                 // 3.2.1 union
-                if (tb.is_union){
+                if (tb.is_union) {
                     // 3.2.1.1 create temp table
                     // for union, create temp table after response merge, just use the first child temp_table_name as temp table name
                     // todo(11/14 by swh) : when to delete temp table?
                     std::string drop_table_sql = "drop table if exists " + first_child_temp_table_name + ";";
                     // todo : handle sql execution failure
                     execute_non_query_sql(drop_table_sql);
-                    std::string create_table_sql = "create table `" + first_child_temp_table_name + "` ( " + sub_response.attr_meta() +
-                                                   " ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+                    std::string create_table_sql =
+                            "create table `" + first_child_temp_table_name + "` ( " + sub_response.attr_meta() +
+                            " ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
                     execute_non_query_sql(create_table_sql);
                     if (sub_response.attr_values_size() == 0) {
                         LOG(ERROR) << "no response!";
                     } else {
                         std::string insert_table_sql =
-                                "insert into `" + first_child_temp_table_name + "` values (" + sub_response.attr_values(0) + ")";
+                                "insert into `" + first_child_temp_table_name + "` values (" +
+                                sub_response.attr_values(0) + ")";
                         for (int i = 1; i < sub_response.attr_values_size(); ++i) {
                             insert_table_sql += ", (" + sub_response.attr_values(i) + ")";
                         }
@@ -536,44 +553,44 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     }
 
                     // 3.2.1.2 single op -- project at most
-                    if (tb.project_expr.empty()){
+                    if (tb.project_expr.empty()) {
                         tb.project_expr = "*";
                     }
                     std::string sql = "select " + tb.project_expr + " from " + first_child_temp_table_name;
-                    if (!tb.select_expr.empty()){
-                        sql +=  " where " + tb.select_expr;
+                    if (!tb.select_expr.empty()) {
+                        sql += " where " + tb.select_expr;
                     }
                     sql += ";";
                     int count = execute_query_sql(sql, first_child_temp_table_name, response, NON_LEAF);
-                    if (count <= 0){
+                    if (count <= 0) {
                         cntl->SetFailed("empty result for sql: " + sql);
                     }
                     return;
                 }
                     // 3.2.2 join
-                else{
-                    if (tb.project_expr.empty()){
+                else {
+                    if (tb.project_expr.empty()) {
                         tb.project_expr = "*";
                     }
                     std::string sql = "select " + tb.project_expr + " from ";
-                    for (auto iter = tb.children.cbegin(); iter != tb.children.cend() ; iter++) {
+                    for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
                         sql += iter->first + ", ";
                     }
                     sql = sql.substr(0, sql.length() - 1);
                     sql += "where " + tb.join_expr;
 
-                    if (!tb.select_expr.empty()){
-                        sql +=  " and " + tb.select_expr;
+                    if (!tb.select_expr.empty()) {
+                        sql += " and " + tb.select_expr;
                     }
                     sql += ";";
                     int count = execute_query_sql(sql, first_child_temp_table_name, response, NON_LEAF);
-                    if (count <= 0){
+                    if (count <= 0) {
                         cntl->SetFailed("empty result for sql: " + sql);
                     }
                     return;
                 }
 
-            } else{
+            } else {
                 LOG(ERROR) << "cascading rpc request failed!";
                 LOG(ERROR) << sub_cntl.ErrorText();
                 cntl->SetFailed("cascading rpc request failed!");
