@@ -187,7 +187,7 @@ void write_query_processing_statistics_to_etcd(std::vector<std::string> temp_tab
         cntl.Reset();
 
         // 2.communication cost
-        key = QUERY_PROCESSING_STATISTICS_PREFIX + "/" + temp_table_names[i] + "/communication_cost";
+        key = QUERY_PROCESSING_STATISTICS_PREFIX + "/" + temp_table_names[i] + "/communication-cost";
         value = std::to_string(communication_costs[i]);
         //LOG(INFO) << "put <" << key << "," << value << ">";
         j["key"] = base64_encode(key);
@@ -259,7 +259,7 @@ void split_string(const std::string &s, std::vector<std::string> &v, const std::
         v.push_back(s.substr(pos1));
 }
 
-temp_table &read_temp_table_meta(const std::string &temp_table_name) {
+temp_table read_temp_table_meta(const std::string &temp_table_name) {
     temp_table tb;
     tb.ret_code = -1;
     tb.is_union = false;
@@ -607,8 +607,8 @@ void DDBServiceImpl::LoadTable(::google::protobuf::RpcController *controller, co
     brpc::ClosureGuard done_guard(done);
     auto *cntl =
             dynamic_cast<brpc::Controller *>(controller);
-    std::string table_name = request->table_name();
-    std::string attr_meta = request->attr_meta();
+    const std::string& table_name = request->table_name();
+    const std::string& attr_meta = request->attr_meta();
 
     std::string create_table_sql = "create table if not exists `" + table_name + "` ( " + attr_meta +
                                    " ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";

@@ -71,9 +71,9 @@ include_directories(${OPENSSL_INCLUDE_DIR})
 find_package(OpenSSL)
 
 
-add_executable(query-loader src/load_query.cpp src/base64.cpp)
-add_executable(query-scheduler src/schedule_query.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
-add_executable(query-executer src/execute_query.cpp ${PROTO_SRC} ${PROTO_HEADER})
+
+add_library(network-utils SHARED src/network.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
+
 set(DYNAMIC_LIB
     ${CMAKE_THREAD_LIBS_INIT}
     ${GFLAGS_LIBRARY}
@@ -85,7 +85,17 @@ set(DYNAMIC_LIB
     )
 
 
+#target_include_directories(network-utils PUBLIC include)
+target_link_libraries(network-utils ${BRPC_LIB} ${DYNAMIC_LIB})
+
+
+add_executable(query-loader src/load_query.cpp src/base64.cpp)
+add_executable(query-scheduler src/schedule_query.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(query-executer src/execute_query.cpp ${PROTO_SRC} ${PROTO_HEADER})
+
+
 target_link_libraries(query-loader ${BRPC_LIB} ${DYNAMIC_LIB})
 target_link_libraries(query-scheduler ${BRPC_LIB} ${MYSQL_LIB} ${DYNAMIC_LIB})
 target_link_libraries(query-executer ${BRPC_LIB} ${DYNAMIC_LIB})
+
      
