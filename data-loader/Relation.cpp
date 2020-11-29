@@ -32,7 +32,7 @@ void Relation::add_attribute(std::string aname, bool is_key, int type, int value
     this->attributes.push_back(Attribute(aname, is_key, type, value_type, value));
 }
 
-void Relation::add_attribute(std::string aname, bool is_key, int type, int value_type, std::map<int, double> proportion) {
+void Relation::add_attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion) {
     this->attributes.push_back(Attribute(aname, is_key, type, value_type, proportion));
 }
 

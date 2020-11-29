@@ -1,17 +1,6 @@
-insert into Customer(id, name, rank) values(300001, 'Xiaoming', 1);
-insert into Publisher(id, name, nation) values(104001,'High Education Press', 'PRC');
-insert into Customer(id, name, rank) values(300002,'Xiaohong', 1);
-insert into Book(id, title, authors, publisher_id, copies) values(205001, 'DDB', 'Oszu', 104001, 100);
-insert into Orders(customer_id, book_id, quantity) values(300001, 205001,5);
-
-Delete from Orders;
-Delete from Book where copies = 100;
-delete from Publisher where nation = 'PRC';
-delete from Customer where name='Xiaohong' AND rank=1;
-delete from Customer where rank = 1;
-
 select *
-from Customer;
+from Customer, User;
+
 select Publisher.name
 from Publisher;
 
@@ -65,3 +54,14 @@ and Orders.quantity > 1
 and Publisher.nation = 'PRC';
 
 show tables;
+insert into Customer(id, name, rank) values(300001, 'Xiaoming', 1);
+insert into Publisher(id, name, nation) values(104001,'High Education Press', 'PRC');
+insert into Customer(id, name, rank) values(300002,'Xiaohong', 1);
+insert into Book(id, title, authors, publisher_id, copies) values(205001, 'DDB', 'Oszu', 104001, 100);
+insert into Orders(customer_id, book_id, quantity) values(300001, 205001,5);
+
+Delete from Orders;
+Delete from Book where copies = 100;
+delete from Publisher where nation = 'PRC';
+delete from Customer where name='Xiaohong' AND rank=1;
+delete from Customer where rank = 1;

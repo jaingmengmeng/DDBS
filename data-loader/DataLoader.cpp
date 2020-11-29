@@ -31,7 +31,7 @@ DataLoader::DataLoader() {
 
     Customer->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{300001, 315000});
     Customer->add_attribute(std::string("name"), false, 2);
-    std::map<int, double> m; m[1] = 0.4; m[2] = 0.3; m[3] = 0.3;
+    std::map<std::string, double> m; m["1"] = 0.4; m["2"] = 0.3; m["3"] = 0.3;
     Customer->add_attribute(std::string("rank"), false, 1, 4, m);
     // std::cout << *Customer << std::endl;
 
@@ -42,7 +42,8 @@ DataLoader::DataLoader() {
 
     Publisher->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{100001, 105000});
     Publisher->add_attribute(std::string("name"), false, 2);
-    Publisher->add_attribute(std::string("nation"), false, 2);
+    std::map<std::string, double> m2; m2["PRC"] = 0.5; m2["USA"] = 0.3;
+    Publisher->add_attribute(std::string("nation"), false, 2, 4, m2);
     // std::cout << *Publisher << std::endl;
 
     // add Fragments

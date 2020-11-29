@@ -6,6 +6,9 @@ op_type(op_type), aname(aname), num(num) {}
 Predicate::Predicate(int op_type, std::string aname, std::string str) :
 op_type(op_type), aname(aname), str(str) {}
 
+Predicate::Predicate(int op_type, std::vector<std::string> join) :
+op_type(op_type), join(join) {}
+
 std::string double2string(double num) {
     std::ostringstream myos;
     myos << num;
@@ -34,7 +37,7 @@ std::ostream& operator<<(std::ostream& os, Predicate p) {
             os << p.aname << std::string(" = '") << p.str << std::string("'");
             break;
         case 7:
-            // os << p.aname << std::string(" = ") << p.join;
+            os << p.join[0] << std::string(" = ") << p.join[1];
             break;
         default:
             break;

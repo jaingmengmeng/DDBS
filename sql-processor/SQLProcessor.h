@@ -12,16 +12,20 @@
 
 class SQLProcessor {
 private:
-    // void SelectStatement() {}
-public:
-    std::string query;
+    hsql::SelectStatement* select_stat;
+    hsql::InsertStatement* insert_stat;
+    hsql::DeleteStatement* delete_stat;
     hsql::SQLParserResult result;
     hsql::SQLStatement* stat;
+public:
+    std::string query;
     SelectStatement select;
 
     SQLProcessor(std::string q);
     bool isValid();
     const char *errorMsg();
+    void solve_expr(hsql::Expr* expr);
+    std::string get_aname_from_expr(hsql::Expr* expr);
 };
 
 #endif

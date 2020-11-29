@@ -18,16 +18,36 @@ void SelectStatement::add_where(Predicate predicate) {
     this->where.push_back(predicate);
 }
 
+void SelectStatement::add_where(int op_type, std::string aname, double num) {
+    this->where.push_back(Predicate(op_type, aname, num));
+}
+
+void SelectStatement::add_where(int op_type, std::string aname, std::string str) {
+    this->where.push_back(Predicate(op_type, aname, str));
+}
+
+void SelectStatement::add_where(int op_type, std::vector<std::string> join) {
+    this->where.push_back(Predicate(op_type, join));
+}
+
 std::ostream& operator<<(std::ostream& os, SelectStatement s) {
-    os << "from_list: ";
-    for(int i=0; i<s.from.size(); ++i) {
-        os << s.from[i] << "\t";
-    }
-    os << "\n";
     os << "select_list: ";
     for(auto attribute : s.select) {
         os << attribute << "\t";
     }
     os << "\n";
+    os << "from_list: ";
+    for(auto rname : s.from) {
+        os << rname << "\t";
+    }
+    os << "\n";
+    if(s.where.size() > 0) {
+        os << "where_list: ";
+        for(int i=0; i<s.where.size(); ++i) {
+            if(i > 0) os << std::string(" AND ");
+            os << s.where[i];
+        }
+        os << "\n";
+    }
     return os;
 }

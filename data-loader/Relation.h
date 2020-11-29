@@ -22,7 +22,7 @@ public:
     void add_attribute(Attribute a);
     void add_attribute(std::string aname, bool is_key, int type);
     void add_attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value);
-    void add_attribute(std::string aname, bool is_key, int type, int value_type, std::map<int, double> proportion);
+    void add_attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion);
     void add_fragment(Fragment f);
     void add_fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<std::string> vf_condition);
     void add_fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<Predicate> hf_condition);

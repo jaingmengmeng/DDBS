@@ -18,12 +18,12 @@ public:
     //3:PN:Positive Gaussian Distribution e.g.X~N(3,2)and X>0
     //4:Discrete:give corresponding key and proportion.
     std::vector<double> value; //Value for ValueType 1,2,3
-    std::map<int, double> proportion; //Value for ValueType 4.
+    std::map<std::string, double> proportion; //Value for ValueType 4.
     //when type=1(Integer) value_type can still =4
 
     Attribute(std::string aname, bool is_key, int type);
     Attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value);
-    Attribute(std::string aname, bool is_key, int type, int value_type, std::map<int, double> proportion);
+    Attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion);
 };
 
 #endif
