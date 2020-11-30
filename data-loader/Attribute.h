@@ -9,6 +9,9 @@ class Attribute {
 private:
     friend std::ostream& operator<<(std::ostream& os, Attribute a);
 public:
+    const int num_len = 11;
+    const int str_len = 20;
+    const std::string not_null = "not null";
     std::string aname; // Name of attribute e.g.customer_rank
     bool is_key;
     int type; //1:Integer 2:String
@@ -24,6 +27,8 @@ public:
     Attribute(std::string aname, bool is_key, int type);
     Attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value);
     Attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion);
+
+    std::string get_attr_meta();    // get the meta of the attribute
 };
 
 #endif

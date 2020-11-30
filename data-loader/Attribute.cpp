@@ -25,3 +25,30 @@ std::ostream& operator<<(std::ostream& os, Attribute a) {
         os << std::string(" key");
     return os;
 }
+
+std::string Attribute::get_attr_meta() {
+    std::string res = "";
+    res += "`";
+    res += this->aname;
+    res += "`";
+    res += " ";
+    switch (this->type) {
+        // eg. `id` int(11) not null
+        case 1:
+            res += "int(";
+            res += std::to_string(this->num_len);
+            res += ")";
+            break;
+        // eg. `name` varchar(20) not null
+        case 2:
+            res += "varchar(";
+            res += std::to_string(this->str_len);
+            res += ")";
+            break;
+        default:
+            break;
+    }
+    res += " ";
+    res += this->not_null;
+    return res;
+}

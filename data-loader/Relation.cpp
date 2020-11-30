@@ -57,3 +57,42 @@ void Relation::print_fragments() {
 void Relation::set_num_of_recs(int n) {
     this->num_of_recs = n;
 }
+
+std::vector<std::string> Relation::get_attrs_meta() {
+    std::vector<std::string> res;
+    for(auto attribute : this->attributes) {
+        res.push_back(attribute.get_attr_meta());
+    }
+    return res;
+}
+
+std::vector<std::string> Relation::get_fragmented_attrs_meta(std::string sname) {
+    if(this->is_horizontal) {
+        return this->get_attrs_meta();
+    } else {
+        std::vector<std::string> aname_list;
+        std::vector<std::string> res;
+        for(auto fragment : this->frags) {
+            if(fragment.sname == sname) {
+                aname_list = fragment.vf_condition;
+            }
+        }
+        for(auto aname : aname_list) {
+            for(auto attribute : this->attributes) {
+                if(attribute.aname == aname) {
+                    res.push_back(attribute.get_attr_meta());
+                }
+            }
+        }
+        return res;
+    }
+}
+
+bool Relation::in_site(std::string sname) {
+    for(auto fragment : this->frags) {
+        if(fragment.sname == sname) {
+            return true;
+        }
+    }
+    return false;
+}

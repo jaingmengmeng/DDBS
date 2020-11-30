@@ -236,7 +236,7 @@ std::vector<std::string> DataLoader::import_data(std::string sname, std::string 
     return res;
 }
 
-std::string DataLoader::import_data_sql(std::string sname, std::string rname) {
+std::string DataLoader::import_data_sql(std::string sname, std::string rname, std::string file_path) {
     std::string res = std::string("");
     std::vector<std::vector<std::string>> data = this->fragmented_datas[rname][sname];
     Relation* r = this->get_relation(rname);
@@ -284,6 +284,12 @@ std::string DataLoader::import_data_sql(std::string sname, std::string rname) {
         res += std::string(")");
     }
     res += std::string(";");
+    if(file_path != "") {
+        // 如果没有文件则创建文件; 如果有则清空文件.
+        std::ofstream fout(file_path, std::ios::ate | std::ios::out);
+        fout << res << std::endl;
+        fout.close();
+    }
     return res;
 }
 

@@ -7,6 +7,7 @@
 #include "sql-processor/SQLProcessor.h"
 #include "data-loader/DataLoader.h"
 #include "utils/utils.h"
+// #include "network-utils/network.h"
 
 void solve_multi_query(std::string q) {
     std::vector<std::string> query_list;
@@ -98,8 +99,13 @@ int main(int argc, char *argv[]) {
                 // std::map<std::string, std::vector<std::string>> insert = data_loader.load_data();
                 for(auto sname : data_loader.sites) {
                     for(auto relation : data_loader.relations) {
-                        std::vector<std::string> insert_values = data_loader.import_data(relation->rname, sname);
-                        // do something
+                        // Determine whether the relation table is assigned to the current site
+                        if(relation->in_site(sname)) {
+                            std::vector<std::string> insert_values = data_loader.import_data(relation->rname, sname);
+                            std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(sname));
+                            std::cout << attr_meta << std::endl;
+                            // load_table(sname, relation->rname, attr_meta, insert_values);
+                        }
                     }
                 }
                 // initial variables

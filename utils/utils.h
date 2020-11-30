@@ -40,4 +40,13 @@ inline std::string upper_string(std::string s) {
     return s;
 }
 
+inline std::string combine_vector_string(const std::vector<std::string>& v) {
+    std::string res = "";
+    for(int i=0; i<v.size(); ++i) {
+        if(i > 0) res += ", ";
+        res += v[i];
+    }
+    return res;
+}
+
 #endif
