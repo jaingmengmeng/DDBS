@@ -1,13 +1,13 @@
 #include "Attribute.h"
 
 Attribute::Attribute(std::string aname, bool is_key, int type) : 
-aname(aname),  is_key(is_key), type(type) {}
+aname(lower_string(aname)),  is_key(is_key), type(type) {}
 
 Attribute::Attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value) :
-aname(aname),  is_key(is_key), type(type), value_type(value_type), value(value) {}
+aname(lower_string(aname)),  is_key(is_key), type(type), value_type(value_type), value(value) {}
 
 Attribute::Attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion) :
-aname(aname),  is_key(is_key), type(type), value_type(value_type), proportion(proportion) {}
+aname(lower_string(aname)),  is_key(is_key), type(type), value_type(value_type), proportion(proportion) {}
 
 std::ostream& operator<<(std::ostream& os, Attribute a) {
     os << a.aname;

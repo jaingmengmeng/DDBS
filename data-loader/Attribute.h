@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+#include "../utils/utils.h"
+
 class Attribute {
 private:
     friend std::ostream& operator<<(std::ostream& os, Attribute a);

@@ -1,7 +1,7 @@
 #include "Relation.h"
 
 Relation::Relation(std::string rname, bool is_horizontal=true) :
-rname(rname), is_horizontal(is_horizontal) {
+rname(lower_string(rname)), is_horizontal(is_horizontal) {
     this->num_of_recs = 0;
 }
 

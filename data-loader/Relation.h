@@ -7,6 +7,7 @@
 
 #include "Fragment.h"
 #include "Attribute.h"
+#include "../utils/utils.h"
 
 class Relation {
 private:

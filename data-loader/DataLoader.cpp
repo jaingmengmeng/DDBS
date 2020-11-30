@@ -6,10 +6,10 @@ DataLoader::DataLoader() {
 
 void DataLoader::init() {
     // initialize file_path;
-    this->files[std::string("Book")] = std::string("../files/data/book.tsv");
-    this->files[std::string("Customer")] = std::string("../files/data/customer.tsv");
-    this->files[std::string("Orders")] = std::string("../files/data/orders.tsv");
-    this->files[std::string("Publisher")] = std::string("../files/data/publisher.tsv");
+    this->files[std::string("book")] = std::string("../files/data/book.tsv");
+    this->files[std::string("customer")] = std::string("../files/data/customer.tsv");
+    this->files[std::string("orders")] = std::string("../files/data/orders.tsv");
+    this->files[std::string("publisher")] = std::string("../files/data/publisher.tsv");
     this->sites.push_back(std::string("site1"));
     this->sites.push_back(std::string("site2"));
     this->sites.push_back(std::string("site3"));

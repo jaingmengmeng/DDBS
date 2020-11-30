@@ -5,6 +5,8 @@
 #include <string>
 #include <sstream>
 
+#include "../utils/utils.h"
+
 class Predicate {
 private:
     friend std::ostream& operator<<(std::ostream& os, Predicate p);

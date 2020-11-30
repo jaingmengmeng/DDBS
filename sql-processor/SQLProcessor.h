@@ -9,6 +9,7 @@
 #include "../../third-party/sql-parser/include/hsql/SQLParser.h"
 #include "../../third-party/sql-parser/include/hsql/util/sqlhelper.h"
 #include "SelectStatement.h"
+#include "../utils/utils.h"
 
 class SQLProcessor {
 private:

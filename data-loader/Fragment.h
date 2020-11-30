@@ -5,6 +5,7 @@
 #include <string>
 
 #include "Predicate.h"
+#include "../utils/utils.h"
 
 class Fragment {
 private:

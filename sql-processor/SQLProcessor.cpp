@@ -26,13 +26,13 @@ SQLProcessor::SQLProcessor(std::string q) {
                             aname = std::string("*");
                             if(this->select_stat->fromTable->type == hsql::kTableName) {
                                 rname = this->select_stat->fromTable->getName();
-                                this->select.add_select(rname + std::string("_") + aname);
+                                this->select.add_select(lower_string(rname) + std::string("_") + aname);
                             }
                             // eg. select * from user,book where book.user_id=user.id;
                             else if(this->select_stat->fromTable->type == hsql::kTableCrossProduct) {
                                 for(const hsql::TableRef* t : *this->select_stat->fromTable->list){
                                     rname = t->getName();
-                                    this->select.add_select(rname + std::string("_") + aname);
+                                    this->select.add_select(lower_string(rname) + std::string("_") + aname);
                                 }
                             }
                         }
@@ -48,7 +48,7 @@ SQLProcessor::SQLProcessor(std::string q) {
                                 }
                             }
                             aname = expr->getName();
-                            this->select.add_select(rname + std::string("_") + aname);
+                            this->select.add_select(lower_string(rname) + std::string("_") + aname);
                         }
                     }
                 }
@@ -57,12 +57,12 @@ SQLProcessor::SQLProcessor(std::string q) {
                 if(this->select_stat->fromTable) {
                     // eg. select * from user;
                     if(this->select_stat->fromTable->type == hsql::kTableName) {
-                        this->select.add_from(this->select_stat->fromTable->getName());
+                        this->select.add_from(lower_string(this->select_stat->fromTable->getName()));
                     }
                     // eg. select * from user,book where book.user_id=user.id;
                     else if(this->select_stat->fromTable->type == hsql::kTableCrossProduct) {
                         for(const hsql::TableRef* t : *this->select_stat->fromTable->list){
-                            this->select.add_from(t->getName());
+                            this->select.add_from(lower_string(t->getName()));
                         }
                     }
                 }
@@ -133,7 +133,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                     // aname = expr->expr->getName();
                     aname = this->get_aname_from_expr(expr->expr);
                     str = expr->expr2->getName();
-                    this->select.add_where(op_type, aname, str);
+                    this->select.add_where(op_type, lower_string(aname), str);
                 }
                 // eg. 'jiang'=user.name
                 else if(expr->expr2->type == hsql::kExprColumnRef && expr->expr->type == hsql::kExprLiteralString) {
@@ -141,13 +141,13 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                     // aname = expr->expr2->getName();
                     aname = this->get_aname_from_expr(expr->expr2);
                     str = expr->expr->getName();
-                    this->select.add_where(op_type, aname, str);
+                    this->select.add_where(op_type, lower_string(aname), str);
                 }
                 // eg. user.id=creator.user_id
                 else if(expr->expr->type == hsql::kExprColumnRef && expr->expr2->type == hsql::kExprColumnRef) {
                     op_type = 7;
                     // std::vector<std::string> join{expr->expr->getName(), expr->expr2->getName()};
-                    std::vector<std::string> join{this->get_aname_from_expr(expr->expr), this->get_aname_from_expr(expr->expr2)};
+                    std::vector<std::string> join{lower_string(this->get_aname_from_expr(expr->expr)), lower_string(this->get_aname_from_expr(expr->expr2))};
                     this->select.add_where(op_type, join);
                 }
             } else if(expr->expr->getName()) {
@@ -156,14 +156,14 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                 aname = this->get_aname_from_expr(expr->expr);
                 num = expr->expr2->ival;
                 std::cout << expr->expr2->ival << std::endl;
-                this->select.add_where(op_type, aname, num);
+                this->select.add_where(op_type, lower_string(aname), num);
             } else {
                 op_type = 5;
                 // aname = expr->expr2->getName();
                 aname = this->get_aname_from_expr(expr->expr2);
                 num = expr->expr->ival;
                 std::cout << expr->expr->ival << std::endl;
-                this->select.add_where(op_type, aname, num);
+                this->select.add_where(op_type, lower_string(aname), num);
             }
         }
         // < 12
@@ -172,7 +172,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             // aname = expr->expr->getName();
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
-            this->select.add_where(op_type, aname, num);
+            this->select.add_where(op_type, lower_string(aname), num);
         }
         // <= 13
         else if(expr->opType == hsql::kOpLessEq) {
@@ -180,7 +180,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             // aname = expr->expr->getName();
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
-            this->select.add_where(op_type, aname, num);
+            this->select.add_where(op_type, lower_string(aname), num);
         }
         // > 14
         else if(expr->opType == hsql::kOpGreater) {
@@ -188,7 +188,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             // aname = expr->expr->getName();
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
-            this->select.add_where(op_type, aname, num);
+            this->select.add_where(op_type, lower_string(aname), num);
         }
         // >= 15
         else if(expr->opType == hsql::kOpGreaterEq) {
@@ -196,7 +196,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             // aname = expr->expr->getName();
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
-            this->select.add_where(op_type, aname, num);
+            this->select.add_where(op_type, lower_string(aname), num);
         }
     }
 }
@@ -217,5 +217,5 @@ std::string SQLProcessor::get_aname_from_expr(hsql::Expr* expr) {
         }
         aname = expr->getName();
     }
-    return rname + std::string("_") + aname;
+    return lower_string(rname) + std::string("_") + lower_string(aname);
 }
