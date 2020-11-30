@@ -6,19 +6,7 @@
 
 #include "sql-processor/SQLProcessor.h"
 #include "data-loader/DataLoader.h"
-
-void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c) {
-    std::string::size_type pos1, pos2;
-    pos2 = s.find(c);
-    pos1 = 0;
-    while(std::string::npos != pos2) {
-        v.push_back(s.substr(pos1, pos2-pos1));
-        pos1 = pos2 + c.size();
-        pos2 = s.find(c, pos1);
-    }
-    if(pos1 != s.length())
-        v.push_back(s.substr(pos1));
-}
+#include "utils/utils.h"
 
 void solve_multi_query(std::string q) {
     std::vector<std::string> query_list;
@@ -47,13 +35,30 @@ void solve_single_query(std::string query) {
 
 int main(int argc, char *argv[]) {
     // [TODO] start statement
-    std::string logo = "  _____  _____  ____   _____ \n |  __ \\|  __ \\|  _ \\ / ____|\n | |  | | |  | | |_) | (___  \n | |  | | |  | |  _ < \\___ \\ \n | |__| | |__| | |_) |____) |\n |_____/|_____/|____/|_____/ \n";
-    std::string start = "Welcome to the DDBS monitor.\nCommands end with `;`.\nType `help` for help.\nFor more information, visit: https://github.com/jaingmengmeng/DDBS\n";
+    std::string logo =  "  _____  _____  ____   _____ \n"
+                        " |  __ \\|  __ \\|  _ \\ / ____|\n"
+                        " | |  | | |  | | |_) | (___  \n"
+                        " | |  | | |  | |  _ < \\___ \\ \n"
+                        " | |__| | |__| | |_) |____) |\n"
+                        " |_____/|_____/|____/|_____/ \n";
+    std::string start = "Welcome to the DDBS monitor.\n"
+                        "Commands end with `;`.\n"
+                        "Type `help` or `h` for help.\n"
+                        "For more information, visit: https://github.com/jaingmengmeng/DDBS\n";
     std::string system = "ddbs";
     std::string blank = "   -";
     std::string bye = "Bye";
+    std::string command_help =  "Command Usage:\t 1) `./main`\n"
+                                "\t\t 2) `./main <filename>`";
     // [TODO] help statement
-    std::string help = "Usage: 1) `./main`    2) `./main <filename>`";
+    std::string help =  "Usage:\t 1) `init`\n"
+                        "\t 2) `show tables[;]`\n"
+                        "\t 3) `load data[;]`\n"
+                        "\t 4) `help` or `h`\n"
+                        "\t 5) `select`\n"
+                        "\t 6) `insert`\n"
+                        "\t 7) `delete`\n"
+                        "\t 8) `quit` or `q` or `exit`\n";
     std::string file_error = "Error opening file. Please check your filename.";
     std::string query_error = "The SQL string is invalid!";
 
@@ -71,32 +76,38 @@ int main(int argc, char *argv[]) {
                 query += " ";
             query += str;
             // transform(query.begin(), query.end(), query.begin(), ::tolower);
-            if(query == "quit" || query == "exit") {
+            if(lower_string(query) == "quit" || lower_string(query) == "q" || lower_string(query) == "exit") {
                 std::cout << bye << std::endl;
                 return 0;
             }
-            if(query == "init") {
+            if(lower_string(query) == "init") {
                 data_loader.init();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
                 continue;
             }
-            if(query == "show tables" || query == "show tables;") {
+            if(lower_string(query) == "show tables" || lower_string(query) == "show tables;") {
                 data_loader.show_tables();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
                 continue;
             }
-            if(query == "load data") {
-                std::map<std::string, std::vector<std::string>> insert = data_loader.load_data();
+            if(lower_string(query) == "load data" || lower_string(query) == "load data;") {
+                // std::map<std::string, std::vector<std::string>> insert = data_loader.load_data();
+                for(auto sname : data_loader.sites) {
+                    for(auto relation : data_loader.relations) {
+                        std::vector<std::string> insert_values = data_loader.import_data(relation->rname, sname);
+                        // do something
+                    }
+                }
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
                 continue;
             }
-            if(query == "help") {
+            if(lower_string(query) == "help" || lower_string(query) == "h") {
                 std::cout << help << std::endl;
                 // initial variables
                 query = "";
@@ -104,7 +115,7 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if(str[str.size()-1] == ';') {
-                // [TODO] process the query statements
+                // process the query statements
                 solve_single_query(query);
                 // initial variables
                 query = "";
@@ -121,13 +132,10 @@ int main(int argc, char *argv[]) {
                     query += " ";
                 query += str;
                 if(str[str.size()-1] == ';') {
-                    // [TODO] process the query statements
+                    // process the query statements
                     solve_single_query(query);
                     // initial variables
                     query = "";
-                    // std::cout << system+"> ";
-                } else {
-                    // std::cout << blank+"> ";
                 }
             }
         } else {
@@ -135,7 +143,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
     } else {
-        std::cout << help << std::endl;
+        std::cout << command_help << std::endl;
     }
     return 0;
 }

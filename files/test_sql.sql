@@ -1,5 +1,5 @@
 select *
-from Customer, User;
+from Customer;
 
 select Publisher.name
 from Publisher;
