@@ -7,7 +7,7 @@ Fragment::Fragment(std::string rname, std::string fname, std::string sname, bool
 rname(lower_string(rname)), fname(lower_string(fname)), sname(sname), is_horizontal(is_horizontal), hf_condition(hf_condition) {}
 
 std::ostream& operator<<(std::ostream& os, Fragment f) {
-    os << f.fname << std::string("\t") << f.rname << std::string("\t") << f.sname << std::string("\t");
+    os << f.fname << std::string("\t") << f.sname << std::string("\t") << f.num_of_recs << std::string("\t");
     if(f.is_horizontal) {
         for(int i=0; i<f.hf_condition.size(); ++i) {
             if(i > 0)
@@ -24,4 +24,8 @@ std::ostream& operator<<(std::ostream& os, Fragment f) {
         os << std::string(")");
     }
     return os;
+}
+
+void Fragment::set_num_of_recs(int n) {
+    this->num_of_recs = n;
 }

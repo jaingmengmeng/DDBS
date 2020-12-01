@@ -30,7 +30,8 @@ public:
     void print_fragments();
 
     void set_num_of_recs(int n);    // set the rows of the relation table
-    std::vector<std::string> get_attrs_meta();  // get global table attributes
+    std::vector<std::string> get_anames();      // get global table attributes
+    std::vector<std::string> get_attrs_meta();  // get global table attributes(meta data)
     std::vector<std::string> get_fragmented_attrs_meta(std::string sname);  // get fragmented table attributes
     bool in_site(std::string sname);  // Determine whether the relation table is assigned to the current site
 };

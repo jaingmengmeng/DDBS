@@ -9,28 +9,24 @@
 #include "utils/utils.h"
 // #include "network-utils/network.h"
 
-void solve_multi_query(std::string q) {
+void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
     SplitString(q, query_list, ";");
     for(int i=0; i<query_list.size(); ++i) {
         std::string query = query_list[i];
-        std::cout << "[" << i << "] " << query << std::endl;
-        SQLProcessor processor = SQLProcessor(query);
-        if (processor.isValid()) {
+        // std::cout << "[" << i << "] " << query << std::endl;
+        SQLProcessor processor = SQLProcessor(query, relations);
+        if (processor.is_valid) {
             
-        } else {
-            std::cout << processor.errorMsg() << std::endl;
         }
     }
 }
 
-void solve_single_query(std::string query) {
-    std::cout << query << std::endl;
-    SQLProcessor processor = SQLProcessor(query);
-    if (processor.isValid()) {
+void solve_single_query(std::string query, std::vector<Relation*> relations) {
+    // std::cout << query << std::endl;
+    SQLProcessor processor = SQLProcessor(query, relations);
+    if (processor.is_valid) {
         
-    } else {
-        std::cout << processor.errorMsg() << std::endl;
     }
 }
 
@@ -122,7 +118,7 @@ int main(int argc, char *argv[]) {
             }
             if(str[str.size()-1] == ';') {
                 // process the query statements
-                solve_single_query(query);
+                solve_single_query(query, data_loader.relations);
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
@@ -139,7 +135,7 @@ int main(int argc, char *argv[]) {
                 query += str;
                 if(str[str.size()-1] == ';') {
                     // process the query statements
-                    solve_single_query(query);
+                    solve_single_query(query, data_loader.relations);
                     // initial variables
                     query = "";
                 }

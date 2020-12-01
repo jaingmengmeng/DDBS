@@ -30,7 +30,7 @@ public:
     Attribute(std::string aname, bool is_key, int type, int value_type, std::vector<double> value);
     Attribute(std::string aname, bool is_key, int type, int value_type, std::map<std::string, double> proportion);
 
-    std::string get_attr_meta();    // get the meta of the attribute
+    std::string get_attr_meta();    // get the meta of the attribute(meta data)
 };
 
 #endif

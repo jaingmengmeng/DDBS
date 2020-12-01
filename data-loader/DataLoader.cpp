@@ -185,6 +185,9 @@ std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fr
             }
         }
     }
+    for(auto& fragment : relation->frags) {
+        fragment.set_num_of_recs(allocated_data_map[fragment.sname].size());
+    }
     return allocated_data_map;
 }
 
