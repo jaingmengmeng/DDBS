@@ -233,7 +233,6 @@ std::vector<std::string> DataLoader::import_data(std::string sname, std::string 
                 values += std::string("'");
             }
         }
-        std::cout << values << std::endl;
         res.push_back(values);
     }
     return res;

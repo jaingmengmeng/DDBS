@@ -97,10 +97,8 @@ int main(int argc, char *argv[]) {
                     for(auto relation : data_loader.relations) {
                         // Determine whether the relation table is assigned to the current site
                         if(relation->in_site(site.sname)) {
-                            std::vector<std::string> insert_values = data_loader.import_data(relation->rname, site.sname);
+                            std::vector<std::string> insert_values = data_loader.import_data(site.sname, relation->rname);
                             std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(site.sname));
-                            // std::cout << attr_meta << std::endl;
-                            // std::cout << site.sname+std::string("_")+relation->rname << std::endl;
                             int res = load_table(site.get_url(), site.sname+std::string("_")+relation->rname, attr_meta, insert_values);
                             std::cout << res << std::endl;
                         }
