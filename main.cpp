@@ -23,7 +23,7 @@ void solve_multi_query(std::string q, std::vector<Relation*> relations) {
 }
 
 void solve_single_query(std::string query, std::vector<Relation*> relations) {
-    // std::cout << query << std::endl;
+    std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, relations);
     if (processor.is_valid) {
         
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
                         if(relation->in_site(sname)) {
                             std::vector<std::string> insert_values = data_loader.import_data(relation->rname, sname);
                             std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(sname));
-                            std::cout << attr_meta << std::endl;
+                            // std::cout << attr_meta << std::endl;
                             int res = load_table(sname, relation->rname, attr_meta, insert_values);
                             std::cout << res << std::endl;
                         }
