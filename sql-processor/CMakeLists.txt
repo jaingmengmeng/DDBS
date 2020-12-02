@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 2.9.10)
 set(CMAKE_CXX_STANDARD 11)
 project(SQLProcessor C CXX)
 
+if(CONAN_LIBCXX STREQUAL "libstdc++11")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+elseif(CONAN_LIBCXX STREQUAL "libstdc++")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+endif()
+
 # sql-parser
 set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../third-party/sql-parser/lib)
 find_library(SQL_PARSER_LIB NAMES libsqlparser.so)
