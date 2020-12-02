@@ -11,9 +11,9 @@ class Fragment {
 private:
     friend std::ostream& operator<<(std::ostream& os, Fragment f);
 public:
-    std::string rname; //relation name
-    std::string fname; //e.g.cus1 cus2 ord1 ord2 ord3 ord4 pub1 ...
-    std::string sname; //site name
+    std::string rname; // relation name
+    std::string fname; // e.g.cus1 cus2 ord1 ord2 ord3 ord4 pub1 ...
+    std::string sname; // site name
     bool is_horizontal;
     int num_of_recs;
     std::vector<std::string> vf_condition; //e.g. customer_id customer_name

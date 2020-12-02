@@ -7,6 +7,7 @@
 #include <map>
 #include <fstream>
 
+#include "Site.h"
 #include "Relation.h"
 #include "../utils/utils.h"
 
@@ -17,7 +18,7 @@ private:
 public:
     std::vector<Relation*> relations;
     std::map<std::string, std::string> files;
-    std::vector<std::string> sites;
+    std::vector<Site> sites;
     std::map<std::string, std::vector<std::vector<std::string>>> datas; // relations
     std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>> fragmented_datas;   // relations, sites
 

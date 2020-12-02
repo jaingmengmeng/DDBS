@@ -10,10 +10,10 @@ void DataLoader::init() {
     this->files[std::string("customer")] = std::string("../files/data/customer.tsv");
     this->files[std::string("orders")] = std::string("../files/data/orders.tsv");
     this->files[std::string("publisher")] = std::string("../files/data/publisher.tsv");
-    this->sites.push_back(std::string("10.77.70.172:8000"));
-    this->sites.push_back(std::string("10.77.70.172:8000"));
-    this->sites.push_back(std::string("10.77.70.188:8000"));
-    this->sites.push_back(std::string("10.77.70.189:8000"));
+    this->sites.push_back(Site("site1", "10.77.70.172", "8000"));
+    this->sites.push_back(Site("site2", "10.77.70.188", "8000"));
+    this->sites.push_back(Site("site3", "10.77.70.189", "8000"));
+    this->sites.push_back(Site("site4", "10.77.70.189", "8000"));
 
     // create Tables;
     Relation* Book = new Relation(std::string("Book"), true);
@@ -55,54 +55,54 @@ void DataLoader::init() {
 
     predicates.clear();
     predicates.push_back(Predicate(4, std::string("id"), 205000));
-    Book->add_fragment(std::string("Book"), std::string("book1"), this->sites[0], true, predicates);
+    Book->add_fragment(std::string("Book"), std::string("book1"), std::string("site1"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("id"), 205000));
     predicates.push_back(Predicate(4, std::string("id"), 210000));
-    Book->add_fragment(std::string("Book"), std::string("book2"), this->sites[1], true, predicates);
+    Book->add_fragment(std::string("Book"), std::string("book2"), std::string("site2"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("id"), 210000));
-    Book->add_fragment(std::string("Book"), std::string("book3"), this->sites[2], true, predicates);
+    Book->add_fragment(std::string("Book"), std::string("book3"), std::string("site3"), true, predicates);
     // Book->print_fragments();
 
-    Customer->add_fragment(std::string("Customer"), std::string("cus1"), this->sites[0], false, std::vector<std::string>{std::string("id"), std::string("name")});
-    Customer->add_fragment(std::string("Customer"), std::string("cus2"), this->sites[1], false, std::vector<std::string>{std::string("id"), std::string("rank")});
+    Customer->add_fragment(std::string("Customer"), std::string("cus1"), std::string("site1"), false, std::vector<std::string>{std::string("id"), std::string("name")});
+    Customer->add_fragment(std::string("Customer"), std::string("cus2"), std::string("site2"), false, std::vector<std::string>{std::string("id"), std::string("rank")});
     // Customer->print_fragments();
 
     predicates.clear();
     predicates.push_back(Predicate(4, std::string("customer_id"), 307000));
     predicates.push_back(Predicate(4, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord1"), this->sites[0], true, predicates);
+    Orders->add_fragment(std::string("Orders"), std::string("ord1"), std::string("site1"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(4, std::string("customer_id"), 307000));
     predicates.push_back(Predicate(1, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord2"), this->sites[1], true, predicates);
+    Orders->add_fragment(std::string("Orders"), std::string("ord2"), std::string("site2"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("customer_id"), 307000));
     predicates.push_back(Predicate(4, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord3"), this->sites[2], true, predicates);
+    Orders->add_fragment(std::string("Orders"), std::string("ord3"), std::string("site3"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("customer_id"), 307000));
     predicates.push_back(Predicate(1, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord4"), this->sites[3], true, predicates);
+    Orders->add_fragment(std::string("Orders"), std::string("ord4"), std::string("site4"), true, predicates);
     // Orders->print_fragments();
 
     predicates.clear();
     predicates.push_back(Predicate(4, std::string("id"), 104000));
     predicates.push_back(Predicate(6, std::string("nation"), std::string("PRC")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub1"), this->sites[0], true, predicates);
+    Publisher->add_fragment(std::string("Publisher"), std::string("pub1"), std::string("site1"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(4, std::string("id"), 104000));
     predicates.push_back(Predicate(6, std::string("nation"), std::string("USA")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub2"), this->sites[1], true, predicates);
+    Publisher->add_fragment(std::string("Publisher"), std::string("pub2"), std::string("site2"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("id"), 104000));
     predicates.push_back(Predicate(6, std::string("nation"), std::string("PRC")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub3"), this->sites[2], true, predicates);
+    Publisher->add_fragment(std::string("Publisher"), std::string("pub3"), std::string("site3"), true, predicates);
     predicates.clear();
     predicates.push_back(Predicate(1, std::string("id"), 104000));
     predicates.push_back(Predicate(6, std::string("nation"), std::string("USA")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub4"), this->sites[3], true, predicates);
+    Publisher->add_fragment(std::string("Publisher"), std::string("pub4"), std::string("site4"), true, predicates);
     // Publisher->print_fragments();
 
     this->load_data();
