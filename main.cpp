@@ -7,7 +7,7 @@
 #include "sql-processor/SQLProcessor.h"
 #include "data-loader/DataLoader.h"
 #include "utils/utils.h"
-// #include "network-utils/network.h"
+#include "network-utils/network.h"
 
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
@@ -100,7 +100,8 @@ int main(int argc, char *argv[]) {
                             std::vector<std::string> insert_values = data_loader.import_data(relation->rname, sname);
                             std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(sname));
                             std::cout << attr_meta << std::endl;
-                            // load_table(sname, relation->rname, attr_meta, insert_values);
+                            int res = load_table(sname, relation->rname, attr_meta, insert_values);
+                            std::cout << res << std::endl;
                         }
                     }
                 }

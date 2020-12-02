@@ -10,10 +10,10 @@ void DataLoader::init() {
     this->files[std::string("customer")] = std::string("../files/data/customer.tsv");
     this->files[std::string("orders")] = std::string("../files/data/orders.tsv");
     this->files[std::string("publisher")] = std::string("../files/data/publisher.tsv");
-    this->sites.push_back(std::string("site1"));
-    this->sites.push_back(std::string("site2"));
-    this->sites.push_back(std::string("site3"));
-    this->sites.push_back(std::string("site4"));
+    this->sites.push_back(std::string("10.77.70.172:8000"));
+    this->sites.push_back(std::string("10.77.70.172:8000"));
+    this->sites.push_back(std::string("10.77.70.188:8000"));
+    this->sites.push_back(std::string("10.77.70.189:8000"));
 
     // create Tables;
     Relation* Book = new Relation(std::string("Book"), true);

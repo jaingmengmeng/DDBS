@@ -8,7 +8,12 @@ add_subdirectory(sql-processor)
 # 添加 data-loader 子目录
 add_subdirectory(data-loader)
 
+# network-utils
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../third-party)
+find_library(NETWORK_LIB NAMES network-utils)
+
 add_executable(main main.cpp)
 
 target_link_libraries(main SQLProcessor)
 target_link_libraries(main DataLoader)
+target_link_libraries(main ${NETWORK_LIB})
