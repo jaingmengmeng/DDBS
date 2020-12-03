@@ -132,49 +132,49 @@ int load_query_for_test(){
 
     // temp-table-1.1.1.1
     kv_mp[prefix + "-1-1-1-1" + "/type"] = LEAF;
-    kv_mp[prefix + "-1-1-1-1" + "/project"] = "id as book_id, title as book_title";
+    kv_mp[prefix + "-1-1-1-1" + "/project"] = "id, title";
     kv_mp[prefix + "-1-1-1-1" + "/select"] = "id > 220000";
-    kv_mp[prefix + "-1-1-1-1" + "/children"] = "book";
+    kv_mp[prefix + "-1-1-1-1" + "/children"] = "site3_book";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.1.1.2
     kv_mp[prefix + "-1-1-1-2" + "/type"] = LEAF;
-    kv_mp[prefix + "-1-1-1-2" + "/project"] = "id as publisher_id, name as publisher_name";
-    kv_mp[prefix + "-1-1-1-2" + "/children"] = "publisher";
+    kv_mp[prefix + "-1-1-1-2" + "/project"] = "id, name";
+    kv_mp[prefix + "-1-1-1-2" + "/children"] = "site2_publisher";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.1.2.1
     kv_mp[prefix + "-1-1-2-1" + "/type"] = LEAF;
     kv_mp[prefix + "-1-1-2-1" + "/select"] = "quantity > 1";
-    kv_mp[prefix + "-1-1-2-1" + "/children"] = "order";
+    kv_mp[prefix + "-1-1-2-1" + "/children"] = "site2_order";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.1.2.2
     kv_mp[prefix + "-1-1-2-2" + "/type"] = LEAF;
-    kv_mp[prefix + "-1-1-2-2" + "/children"] = "customer";
+    kv_mp[prefix + "-1-1-2-2" + "/children"] = "site1_customer";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.2.1.1
     kv_mp[prefix + "-1-2-1-1" + "/type"] = LEAF;
     kv_mp[prefix + "-1-2-1-1" + "/select"] = "quantity > 1";
-    kv_mp[prefix + "-1-2-1-1" + "/children"] = "order";
+    kv_mp[prefix + "-1-2-1-1" + "/children"] = "site4_order";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.2.1.2
     kv_mp[prefix + "-1-2-1-2" + "/type"] = LEAF;
-    kv_mp[prefix + "-1-2-1-2" + "/children"] = "customer";
+    kv_mp[prefix + "-1-2-1-2" + "/children"] = "site1_customer";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
     // temp-table-1.2.2.1
     kv_mp[prefix + "-1-2-2-1" + "/type"] = LEAF;
-    kv_mp[prefix + "-1-2-2-1" + "/project"] = "id as publisher_id, name as publisher_name";
-    kv_mp[prefix + "-1-2-2-1" + "/children"] = "publisher";
+    kv_mp[prefix + "-1-2-2-1" + "/project"] = "id, name";
+    kv_mp[prefix + "-1-2-2-1" + "/children"] = "site4_publisher";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
 
@@ -182,9 +182,11 @@ int load_query_for_test(){
     kv_mp[prefix + "-1-2-2-2" + "/type"] = LEAF;
     kv_mp[prefix + "-1-2-2-2" + "/project"] = "id as book_id, title as book_title";
     kv_mp[prefix + "-1-2-2-2" + "/select"] = "id > 220000";
-    kv_mp[prefix + "-1-2-2-2" + "/children"] = "book";
+    kv_mp[prefix + "-1-2-2-2" + "/children"] = "site3_book";
     load_temp_table(&channel, &cntl, kv_mp);
     kv_mp.clear();
+
+    return 0;
 }
 
 

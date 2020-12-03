@@ -124,12 +124,31 @@ int request_table(std::string temp_table_name, std::string host = "127.0.0.1:800
         TableResponse* response = new TableResponse;
 
         TableRequest request;
-        request.set_temp_table_name(FLAGS_temp_table);
+        request.set_temp_table_name(temp_table_name);
 
-        google::protobuf::Closure* done = brpc::NewCallback(
-                &HandleRequestTableResponse, cntl, response);
+//        google::protobuf::Closure* done = brpc::NewCallback(
+//                &HandleRequestTableResponse, cntl, response);
 
-        stub.RequestTable(cntl, &request, response, done);
+        stub.RequestTable(cntl, &request, response, NULL);
+
+        if (cntl->Failed()) {
+            LOG(WARNING) << "Some site was down, " << cntl->ErrorText();
+            return -1;
+        }
+        LOG(INFO) << "Received response from " << cntl->remote_side() << "\nLatency(us): " << cntl->latency_us();
+        std::cout << "Result meta: " << response->attr_meta() << std::endl;
+        std::cout << "Result: " << std::endl;
+        for (int i = 0; i < response->attr_values_size(); ++i) {
+            std::cout << response->attr_values(i) << std::endl;
+        }
+
+        // delete root temp table
+        cntl->Reset();
+        DeleteTempTableResponse* delete_response = new DeleteTempTableResponse;
+        DeleteTempTableRequest delete_request;
+        delete_request.set_temp_table_name(temp_table_name);
+        stub.DeleteTable(cntl, &delete_request, delete_response, NULL);
+        // todo(1203 by swh) : handle statistics(show, delete)
     }
 
 

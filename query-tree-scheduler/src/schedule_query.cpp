@@ -120,9 +120,9 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
             // 1.leaf -- add table_name prefix
             if (temp_table_type == LEAF) {
                 attr_meta = ("`" + table_name + "_" + rsm->getColumnName(1) + "` " +
-                             rsm->getColumnTypeName(1));
+                             rsm->getColumnTypeName(1) + "(20) default null");
                 for (int i = 2; i <= count; i++) {
-                    attr_meta += (", `" + table_name + "_" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
+                    attr_meta += (", `" + table_name + "_" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i) + "(20) default null");
                     column_names.push_back(rsm->getColumnName(i));
                 }
             }
@@ -131,7 +131,7 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
                 attr_meta = ("`" + rsm->getColumnName(1) + "` " +
                              rsm->getColumnTypeName(1));
                 for (int i = 2; i <= count; i++) {
-                    attr_meta += (", `" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i));
+                    attr_meta += (", `" + rsm->getColumnName(i) + "` " + rsm->getColumnTypeName(i) + "(20) default null");
                     column_names.push_back(rsm->getColumnName(i));
                 }
             }
@@ -357,32 +357,71 @@ temp_table read_temp_table_meta(const std::string &temp_table_name) {
     return tb;
 }
 
+int delete_temp_table(std::unordered_map<std::string, std::string> children){
+
+    for(auto iter = children.cbegin(); iter != children.cend(); iter++){
+        // A Channel represents a communication line to a Server. Notice that
+        // Channel is thread-safe and can be shared by all threads in your program.
+        brpc::Channel channel;
+
+        // Initialize the channel, NULL means using default options.
+        brpc::ChannelOptions options;
+        options.protocol = FLAGS_protocol;
+        options.connection_type = FLAGS_connection_type;
+        options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
+        options.max_retry = FLAGS_max_retry;
+        if (channel.Init(iter->second.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
+            LOG(ERROR) << "Fail to initialize channel";
+            return -1;
+        }
+
+        // Normally, you should not call a Channel directly, but instead construct
+        // a stub Service wrapping it. stub can be shared by all threads as well.
+
+    }
+
+}
+
 class MyCallMapper : public brpc::CallMapper {
 public:
-    MyCallMapper(std::string mTempTableName) : m_temp_table_name(std::move(mTempTableName)) {}
+//    MyCallMapper(std::string mTempTableName) : m_temp_table_name(std::move(mTempTableName)) {}
+    MyCallMapper(std::string mTempTableName, bool isQuery) : m_temp_table_name(std::move(mTempTableName)),
+                                                                    m_is_query(isQuery) {}
 
 public:
     brpc::SubCall
     Map(int channel_index, const google::protobuf::MethodDescriptor *method, const google::protobuf::Message *request,
         google::protobuf::Message *response) override {
-        auto *tableRequest = brpc::Clone<TableRequest>(request);
-        tableRequest->set_temp_table_name(m_temp_table_name);
-        return brpc::SubCall(method, tableRequest, response->New(), brpc::DELETE_REQUEST | brpc::DELETE_RESPONSE);
+        if (m_is_query){
+            auto *table_request = brpc::Clone<TableRequest>(request);
+            table_request->set_temp_table_name(m_temp_table_name);
+            return brpc::SubCall(method, table_request, response->New(), brpc::DELETE_REQUEST | brpc::DELETE_RESPONSE);
+        } else{
+            auto* delete_table_request = brpc::Clone<DeleteTempTableRequest>(request);
+            delete_table_request->set_temp_table_name(m_temp_table_name);
+            return brpc::SubCall(method, delete_table_request, response->New(), brpc::DELETE_REQUEST | brpc::DELETE_RESPONSE);
+        }
     }
 
 private:
     std::string m_temp_table_name;
+    bool m_is_query;
 };
 
 class MyResponseMerger : public brpc::ResponseMerger {
 public:
-    MyResponseMerger(bool mIsUnion, std::string mTempTableName) : m_is_union(mIsUnion),
-                                                                  m_temp_table_name(std::move(mTempTableName)) {}
+//    MyResponseMerger(bool mIsUnion, std::string mTempTableName) : m_is_union(mIsUnion),
+//                                                                  m_temp_table_name(std::move(mTempTableName)) {}
+
+    MyResponseMerger(bool mIsUnion, std::string mTempTableName, bool mIsQuery) : m_is_union(mIsUnion),
+                                                                                        m_temp_table_name(std::move(
+                                                                                                mTempTableName)),
+                                                                                        m_is_query(mIsQuery) {}
 
 public:
     Result Merge(google::protobuf::Message *response, const google::protobuf::Message *sub_response) override {
         // 1. union -- merge before create temp table
-        if (m_is_union) {
+        if (m_is_union || !m_is_query) {
             response->MergeFrom(*sub_response);
         }
             // 2. join or leaf-node -- create temp table before join
@@ -413,6 +452,7 @@ public:
 private:
     bool m_is_union;
     std::string m_temp_table_name;
+    bool m_is_query;
 };
 
 
@@ -424,6 +464,8 @@ public:
     void LoadTable(::google::protobuf::RpcController *controller, const ::LoadTableRequest *request,
                    ::LoadTableResponse *response, ::google::protobuf::Closure *done) override;
 
+    void DeleteTable(::google::protobuf::RpcController *controller, const ::DeleteTempTableRequest *request,
+                     ::DeleteTempTableResponse *response, ::google::protobuf::Closure *done) override;
 };
 
 
@@ -437,13 +479,17 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
 //        response->
     // 1.read meta of requested table
     //int unique_query_id = request->unique_query_id();
-    std::string temp_table_name = request->temp_table_name();
+    const std::string& temp_table_name = request->temp_table_name();
     temp_table tb = read_temp_table_meta("/" + temp_table_name);
 
+    LOG(INFO) << "received request for " << temp_table_name;
 
     // 2.for leaf -> executing sql
     if (tb.type == LEAF) {
         std::string table_name = tb.children.cbegin()->first;
+
+        LOG(INFO) << temp_table_name << " is a leaf node, begin to query " << table_name;
+
         if (tb.project_expr.empty()) {
             tb.project_expr = "*";
         }
@@ -452,7 +498,9 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
             sql += " where " + tb.select_expr;
         }
         sql += ";";
-        int count = execute_query_sql(sql, table_name, response, LEAF);
+        // assume the pattern of table_name is : siteX_original_table_name
+        std::string original_table_name = table_name.substr(table_name.find('_') + 1);
+        int count = execute_query_sql(sql, original_table_name, response, LEAF);
         if (count <= 0) {
             cntl->SetFailed("empty result for sql: " + sql);
         }
@@ -460,6 +508,9 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
     }
         // 3.for non-leaf -> cascading rpc request(parallel channel)
     else {
+
+        LOG(INFO) << temp_table_name << "is a non-leaf node, begin to request it children";
+
         brpc::ParallelChannel channel;
         brpc::ParallelChannelOptions pchan_options;
         pchan_options.timeout_ms = FLAGS_timeout_ms;
@@ -477,9 +528,10 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
         std::string first_child_temp_table_name = tb.children.cbegin()->first;
         std::vector<std::string> child_temp_table_names;
         for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
+            LOG(INFO) << temp_table_name << " ---> " << iter->first;
             child_temp_table_names.emplace_back(iter->first);
-            MyCallMapper *mapper = new MyCallMapper(iter->first);
-            MyResponseMerger *merger = new MyResponseMerger(tb.is_union, iter->first);
+            MyCallMapper *mapper = new MyCallMapper(iter->first, true);
+            MyResponseMerger *merger = new MyResponseMerger(tb.is_union, iter->first, true);
             brpc::Channel *sub_channel = new brpc::Channel;
             std::string server_addr = iter->second + ":8000";
             if (sub_channel->Init(server_addr.c_str(), &sub_options) != 0) {
@@ -498,8 +550,11 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
             TableRequest sub_request;
             TableResponse sub_response;
             brpc::Controller sub_cntl;
+            DeleteTempTableRequest delete_request;
+            DeleteTempTableResponse delete_response;
 
             stub.RequestTable(&sub_cntl, &sub_request, &sub_response, NULL);
+            bool failed = false;
             if (!sub_cntl.Failed()) {
                 // 3.1.1 write query processing statistics to etcd
                 std::vector<long> latencies;
@@ -508,14 +563,16 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     if (!sub_cntl.sub(i)) {
                         LOG(ERROR) << "a controller was lost!";
                         cntl->SetFailed("a controller was lost!");
-                        return;
+                        failed = true;
+                        break;
                     }
                     if (sub_cntl.sub(i)->Failed()) {
                         LOG(ERROR) << "rpc for channel " << sub_cntl.sub(i)->remote_side().ip << " Failed!";
                         LOG(ERROR) << sub_cntl.sub(i)->ErrorText();
                         std::string s = butil::ip2str(sub_cntl.sub(i)->remote_side().ip).c_str();
                         cntl->SetFailed("rpc for channel " + s + " Failed!");
-                        return;
+                        failed = true;
+                        break;
                     }
                     latencies.emplace_back(sub_cntl.sub(i)->latency_us());
                     if (sub_cntl.sub(i)->local_side().ip != sub_cntl.sub(i)->remote_side().ip) {
@@ -524,11 +581,17 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                         communication_costs.emplace_back(0L);
                     }
                 }
-                write_query_processing_statistics_to_etcd(child_temp_table_names, latencies, communication_costs);
+                sub_cntl.Reset();
+                stub.DeleteTable(&sub_cntl, &delete_request, &delete_response, NULL);
+                if(!failed){
+                    // todo(1203 by swh) : delete statistics after query
+                    write_query_processing_statistics_to_etcd(child_temp_table_names, latencies, communication_costs);
+                }
 
                 // 3.2 handle children response
                 // 3.2.1 union
                 if (tb.is_union) {
+                    LOG(INFO) << temp_table_name << "'s combine operator is union, begin to create result temp table named first child : " << first_child_temp_table_name;
                     // 3.2.1.1 create temp table
                     // for union, create temp table after response merge, just use the first child temp_table_name as temp table name
                     // todo(11/14 by swh) : when to delete temp table?
@@ -569,6 +632,9 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                 }
                     // 3.2.2 join
                 else {
+
+                    LOG(INFO) << temp_table_name << "'s combine operator is join, begin to execute join in mysql";
+
                     if (tb.project_expr.empty()) {
                         tb.project_expr = "*";
                     }
@@ -626,6 +692,16 @@ void DDBServiceImpl::LoadTable(::google::protobuf::RpcController *controller, co
         execute_non_query_sql(insert_table_sql);
         response->set_result("succeed!");
     }
+}
+
+void DDBServiceImpl::DeleteTable(::google::protobuf::RpcController *controller, const ::DeleteTempTableRequest *request,
+                                 ::DeleteTempTableResponse *response, ::google::protobuf::Closure *done) {
+    brpc::ClosureGuard done_guard(done);
+    auto *cntl = dynamic_cast<brpc::Controller *>(controller);
+    std::string temp_table_name = request->temp_table_name();
+    std::string sql = "drop table " + temp_table_name + ";";
+    execute_non_query_sql(sql);
+    response->set_result("succeed!");
 }
 
 
