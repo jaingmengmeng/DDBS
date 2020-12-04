@@ -26,8 +26,10 @@ public:
     void init();    // initial the relations, sites variables.
     void show_tables(bool show_fragment=true);   // show all tables & fragments information.
     void load_data();   // initial (data/fragmented data) from files.
-    std::vector<std::string> import_data(std::string sname, std::string rname);   // load data to servers
-    std::string import_data_sql(std::string sname, std::string rname, std::string file_path="");    // load data to servers via sql
+    std::vector<std::string> import_fragmented_data(std::string sname, std::string rname);   // load fragmented data to servers
+    std::vector<std::string> import_data(std::string rname);   // load global data to servers
+    std::string import_fragmented_data_sql(std::string sname, std::string rname, std::string file_path="");    // load fragmented data to servers via sql
+    std::string import_data_sql(std::string rname, std::string file_path="");    // load global data to servers via sql
 };
 
 #endif

@@ -92,17 +92,28 @@ int main(int argc, char *argv[]) {
                 continue;
             }
             if(lower_string(query) == "load data" || lower_string(query) == "load data;") {
-                // std::map<std::string, std::vector<std::string>> insert = data_loader.load_data();
                 for(auto site : data_loader.sites) {
                     for(auto relation : data_loader.relations) {
                         // Determine whether the relation table is assigned to the current site
                         if(relation->in_site(site.sname)) {
-                            std::vector<std::string> insert_values = data_loader.import_data(site.sname, relation->rname);
+                            std::vector<std::string> insert_values = data_loader.import_fragmented_data(site.sname, relation->rname);
                             std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(site.sname));
                             int res = load_table(site.get_url(), site.sname+std::string("_")+relation->rname, attr_meta, insert_values);
-                            std::cout << res << std::endl;
+                            // std::cout << res << std::endl;
                         }
                     }
+                }
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+                continue;
+            }
+            if(lower_string(query) == "load all data" || lower_string(query) == "load all data;") {
+                for(auto relation : data_loader.relations) {
+                    std::vector<std::string> insert_values = data_loader.import_data(relation->rname);
+                    std::string attr_meta = combine_vector_string(relation->get_attrs_meta());
+                    int res = load_table("127.0.0.1:8000", relation->rname, attr_meta, insert_values);
+                    // std::cout << res << std::endl;
                 }
                 // initial variables
                 query = "";

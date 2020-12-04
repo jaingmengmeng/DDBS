@@ -214,7 +214,7 @@ void DataLoader::load_data() {
     }
 }
 
-std::vector<std::string> DataLoader::import_data(std::string sname, std::string rname) {
+std::vector<std::string> DataLoader::import_fragmented_data(std::string sname, std::string rname) {
     std::vector<std::string> res;
     std::vector<std::vector<std::string>> data = this->fragmented_datas[rname][sname];
     Relation* r = this->get_relation(rname);
@@ -238,7 +238,31 @@ std::vector<std::string> DataLoader::import_data(std::string sname, std::string 
     return res;
 }
 
-std::string DataLoader::import_data_sql(std::string sname, std::string rname, std::string file_path) {
+std::vector<std::string> DataLoader::import_data(std::string rname) {
+    std::vector<std::string> res;
+    std::vector<std::vector<std::string>> data = this->datas[rname];
+    Relation* r = this->get_relation(rname);
+    if(data.size() == 0) return res;
+    for(int i=0; i<data.size(); ++i) {
+        std::string values = "";
+        for(int j=0; j<data[i].size(); ++j) {
+            if(j > 0) {
+                values += std::string(", ");
+            }
+            if(r->attributes[j].type == 1) {
+                values += data[i][j];
+            } else if(r->attributes[j].type == 2) {
+                values += std::string("'");
+                values += data[i][j];
+                values += std::string("'");
+            }
+        }
+        res.push_back(values);
+    }
+    return res;
+}
+
+std::string DataLoader::import_fragmented_data_sql(std::string sname, std::string rname, std::string file_path) {
     std::string res = std::string("");
     std::vector<std::vector<std::string>> data = this->fragmented_datas[rname][sname];
     Relation* r = this->get_relation(rname);
@@ -264,6 +288,50 @@ std::string DataLoader::import_data_sql(std::string sname, std::string rname, st
                 }
             }
         }
+    }
+    res += std::string(") VALUES ");
+    for(int i=0; i<data.size(); ++i) {
+        if(i > 0) {
+            res += std::string(", ");
+        }
+        res += std::string("(");
+        for(int j=0; j<data[i].size(); ++j) {
+            if(j > 0) {
+                res += std::string(", ");
+            }
+            if(r->attributes[j].type == 1) {
+                res += data[i][j];
+            } else if(r->attributes[j].type == 2) {
+                res += std::string("'");
+                res += data[i][j];
+                res += std::string("'");
+            }
+        }
+        res += std::string(")");
+    }
+    res += std::string(";");
+    if(file_path != "") {
+        // 如果没有文件则创建文件; 如果有则清空文件.
+        std::ofstream fout(file_path, std::ios::ate | std::ios::out);
+        fout << res << std::endl;
+        fout.close();
+    }
+    return res;
+}
+
+std::string DataLoader::import_data_sql(std::string rname, std::string file_path) {
+    std::string res = std::string("");
+    std::vector<std::vector<std::string>> data = this->datas[rname];
+    Relation* r = this->get_relation(rname);
+    if(data.size() == 0) return res;
+    res += std::string("INSERT INTO ");
+    res += r->rname;
+    res += std::string("(");
+    for(int i=0; i<r->attributes.size(); ++i) {
+        if(i > 0) {
+            res += std::string(", ");
+        }
+        res += r->attributes[i].aname;
     }
     res += std::string(") VALUES ");
     for(int i=0; i<data.size(); ++i) {
