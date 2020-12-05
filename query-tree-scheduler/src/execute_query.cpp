@@ -12,7 +12,7 @@ DEFINE_string(protocol, "baidu_std", "Protocol type. Defined in src/brpc/options
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:8000", "IP Address of server");
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
-DEFINE_int32(timeout_ms, 1000, "RPC timeout in milliseconds");
+DEFINE_int32(timeout_ms, 300000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_int32(interval_ms, 1000, "Milliseconds between consecutive requests");
 
@@ -30,7 +30,7 @@ void HandleRequestTableResponse(
     }
     LOG(INFO) << "Received response from " << cntl->remote_side() << "\nLatency(us): " << cntl->latency_us();
     std::cout << "Result meta: " << response->attr_meta() << std::endl;
-    std::cout << "Result: " << std::endl;
+    std::cout << "Result: " << response->attr_values().size() << std::endl;
     for (int i = 0; i < response->attr_values_size(); ++i) {
         std::cout << response->attr_values(i) << std::endl;
     }
@@ -137,7 +137,7 @@ int request_table(std::string temp_table_name, std::string host = "127.0.0.1:800
         }
         LOG(INFO) << "Received response from " << cntl->remote_side() << "\nLatency(us): " << cntl->latency_us();
         std::cout << "Result meta: " << response->attr_meta() << std::endl;
-        std::cout << "Result: " << std::endl;
+        std::cout << "Result count: " << response->attr_values().size() << std::endl;
         for (int i = 0; i < response->attr_values_size(); ++i) {
             std::cout << response->attr_values(i) << std::endl;
         }
@@ -160,13 +160,15 @@ int main(int argc, char* argv[]){
 // Parse gflags. We recommend you to use gflags as well.
     GFLAGS_NS::ParseCommandLineFlags(&argc, &argv, true);
 
-    std::string host = "127.0.0.1:8000";
-    std::string table_name = "test1";
-    std::string attr_meta = "`id` int(11) not null, `name` varchar(20) not null";
-    std::vector<std::string> attr_values;
-    attr_values.emplace_back("1, 'a'");
-    attr_values.emplace_back("2, 'b'");
-    attr_values.emplace_back("3, 'c'");
+//    std::string host = "127.0.0.1:8000";
+//    std::string table_name = "test1";
+//    std::string attr_meta = "`id` int(11) not null, `name` varchar(20) not null";
+//    std::vector<std::string> attr_values;
+//    attr_values.emplace_back("1, 'a'");
+//    attr_values.emplace_back("2, 'b'");
+//    attr_values.emplace_back("3, 'c'");
+//
+//    return load_table(host, table_name, attr_meta, attr_values);
 
-    return load_table(host, table_name, attr_meta, attr_values);
+    return request_table("query_0_0_temp_table", "127.0.0.1:8000");
 }
