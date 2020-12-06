@@ -26,7 +26,19 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, relations);
     if (processor.is_valid) {
-        
+        // select
+        if(processor.sql_type == 1) {
+            SelectStatement select_stat = processor.select;
+            // [TODO]
+        }
+        // insert
+        else if(processor.sql_type == 2) {
+            InsertStatement select_stat = processor.insert;
+        }
+        // delete
+        else if(processor.sql_type == 3) {
+            DeleteStatement select_stat = processor.delete_s;
+        }
     }
 }
 
