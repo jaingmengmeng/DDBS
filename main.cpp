@@ -11,6 +11,8 @@
 #include "sql-processor/SQLSelectProcessor.cpp"
 #include "sql-processor/get_prefix.cpp"
 
+int auto_increment_id = 0;
+
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
     SplitString(q, query_list, ";");
@@ -36,7 +38,7 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
             for(int i=0;i<relations.size();i++){
                 rs.push_back(*relations[i]);
             }
-            std::string prefix = get_prefix();
+            std::string prefix = get_prefix(auto_increment_id++);
             get_query_tree(select_tree, rs, select_stat, prefix); //get result in select_tree
             // [TODO]
         }

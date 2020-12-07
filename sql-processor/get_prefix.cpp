@@ -38,8 +38,8 @@ int get_site_no(){
     host_entry = gethostbyname(host); //find host information
     check_host_entry(host_entry);
     IP = inet_ntoa(*((struct in_addr*) host_entry->h_addr_list[0])); //Convert into IP string
-//    printf("Current Host Name: %s\n", host);
-//    printf("Host IP: %s\n", IP);
+    // printf("Current Host Name: %s\n", host);
+    // printf("Host IP: %s\n", IP);
     std::string ip = IP;
     if (ip == "10.77.70.72"){
         return 1;
@@ -51,8 +51,6 @@ int get_site_no(){
     return 0;
 }
 
-int auto_increment_id = 0;
-
-std::string get_prefix(){
-	return "query_" + std::to_string(get_site_no()) + "_" + std::to_string(auto_increment_id++)+"_";
+std::string get_prefix(int auto_increment_id){
+	return "query_" + std::to_string(get_site_no()) + "_" + std::to_string()+"_";
 }
