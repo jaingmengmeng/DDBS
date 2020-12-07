@@ -149,6 +149,8 @@ int request_table(std::string temp_table_name, std::string host = "127.0.0.1:800
         delete_request.set_temp_table_name(temp_table_name);
         stub.DeleteTable(cntl, &delete_request, delete_response, NULL);
         // todo(1203 by swh) : handle statistics(show, delete)
+
+        std::cout << "Result count: " << response->attr_values().size() << std::endl;
     }
 
 

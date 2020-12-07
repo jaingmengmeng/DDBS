@@ -80,9 +80,9 @@ int get_site_no(){
     std::string ip = IP;
     if (ip == "10.77.70.72"){
         return 1;
-    } else if (ip == "10.77.70.188"){
+    } else if (ip == "127.0.0.1"){
         return 2;
-    } else if (ip == "10.77.70.189"){
+    } else if (ip == "127.0.0.1"){
         return 3;
     }
     return 0;
@@ -128,10 +128,10 @@ int load_query1_for_test(){
     // 2.write query tree info to etcd
     std::map<std::string, std::string> kv_mp;
     std::unordered_map<int, std::string> site_ip_mp;
-    site_ip_mp[1] = "10.77.70.172";
-    site_ip_mp[2] = "10.77.70.188";
-    site_ip_mp[3] = "10.77.70.189";
-    site_ip_mp[4] = "10.77.70.189";
+    site_ip_mp[1] = "127.0.0.1";
+    site_ip_mp[2] = "127.0.0.1";
+    site_ip_mp[3] = "127.0.0.1";
+    site_ip_mp[4] = "127.0.0.1";
     site_ip_mp[5] = "127.0.0.1";
 
     std::vector<std::string> temp;
@@ -177,10 +177,10 @@ int load_query2_for_test(){
     // 2.write query tree info to etcd
     std::map<std::string, std::string> kv_mp;
     std::unordered_map<int, std::string> site_ip_mp;
-    site_ip_mp[1] = "10.77.70.172";
-    site_ip_mp[2] = "10.77.70.188";
-    site_ip_mp[3] = "10.77.70.189";
-    site_ip_mp[4] = "10.77.70.189";
+    site_ip_mp[1] = "127.0.0.1";
+    site_ip_mp[2] = "127.0.0.1";
+    site_ip_mp[3] = "127.0.0.1";
+    site_ip_mp[4] = "127.0.0.1";
     site_ip_mp[5] = "127.0.0.1";
 
     std::vector<std::string> temp;
@@ -236,10 +236,10 @@ int load_query9_for_test(){
     // 2.write query tree info to etcd
     std::map<std::string, std::string> kv_mp;
     std::map<int, std::string> site_ip_mp;
-    site_ip_mp[1] = "127.0.0.1";//"10.77.70.172";
-    site_ip_mp[2] = "127.0.0.1";//"10.77.70.188";
-    site_ip_mp[3] = "127.0.0.1";//"10.77.70.189";
-    site_ip_mp[4] = "127.0.0.1";//"10.77.70.189";
+    site_ip_mp[1] = "127.0.0.1";//"127.0.0.1";
+    site_ip_mp[2] = "127.0.0.1";//"127.0.0.1";
+    site_ip_mp[3] = "127.0.0.1";//"127.0.0.1";
+    site_ip_mp[4] = "127.0.0.1";//"127.0.0.1";
     site_ip_mp[5] = "127.0.0.1";
     std::vector<std::string> temp;
     int unique_query_id = 9;
@@ -359,11 +359,163 @@ int load_query9_for_test(){
 }
 
 
+int load_query9_1_for_test(){
+    // 1.prepare channel
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+
+    if (channel.Init(ETCD_PUT_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return -1;
+    }
+
+    brpc::Controller cntl;
+
+    // 2.write query tree info to etcd
+    std::map<std::string, std::string> kv_mp;
+
+    kv_mp["query_0_0_temp_table.children"] = "query_0_0_temp_table_1:127.0.0.1|query_0_0_temp_table_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table.combine"] = "query_0_0_temp_table_1.publisher_id = query_0_0_temp_table_2.book_publisher_id";
+    kv_mp["query_0_0_temp_table.project"] = "publisher_name,book_title,customer_name,orders_quantity";
+    kv_mp["query_0_0_temp_table.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1.children"] = "query_0_0_temp_table_1_1:127.0.0.1|query_0_0_temp_table_1_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1.combine"] = "U";
+    kv_mp["query_0_0_temp_table_1.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_1.children"] = "site2_publisher";
+    kv_mp["query_0_0_temp_table_1_1.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_1_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_2.children"] = "site4_publisher";
+    kv_mp["query_0_0_temp_table_1_2.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_1_2.type"] = "L";
+    kv_mp["query_0_0_temp_table_2.children"] = "query_0_0_temp_table_2_1:127.0.0.1|query_0_0_temp_table_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2.combine"] = "query_0_0_temp_table_2_1.book_id = query_0_0_temp_table_2_2.orders_book_id";
+    kv_mp["query_0_0_temp_table_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_1.children"] = "site3_book";
+    kv_mp["query_0_0_temp_table_2_1.project"] = "id,publisher_id,title";
+    kv_mp["query_0_0_temp_table_2_1.select"] = "id > 220000";
+    kv_mp["query_0_0_temp_table_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_2.children"] = "query_0_0_temp_table_2_2_1:127.0.0.1|query_0_0_temp_table_2_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_2.combine"] = "query_0_0_temp_table_2_2_1.customer_id = query_0_0_temp_table_2_2_2.orders_customer_id";
+    kv_mp["query_0_0_temp_table_2_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_2_1.children"] = "site1_customer";
+    kv_mp["query_0_0_temp_table_2_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_2_2.children"] = "query_0_0_temp_table_2_2_2_1:127.0.0.1|query_0_0_temp_table_2_2_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_2_2.combine"] = "U";
+    kv_mp["query_0_0_temp_table_2_2_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_2_2_1.children"] = "site2_orders";
+    kv_mp["query_0_0_temp_table_2_2_2_1.select"] = "quantity > 1";
+    kv_mp["query_0_0_temp_table_2_2_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_2_2_2.children"] = "site4_orders";
+    kv_mp["query_0_0_temp_table_2_2_2_2.select"] = "quantity > 1";
+    kv_mp["query_0_0_temp_table_2_2_2_2.type"] = "L";
+    load_temp_table(&channel, &cntl, kv_mp);
+    return 0;
+}
+
+int load_query10_for_test(){
+    // 1.prepare channel
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+
+    if (channel.Init(ETCD_PUT_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return -1;
+    }
+
+    brpc::Controller cntl;
+
+    // 2.write query tree info to etcd
+    std::map<std::string, std::string> kv_mp;
+
+    kv_mp["query_0_0_temp_table.children"] = "query_0_0_temp_table_1:127.0.0.1|query_0_0_temp_table_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table.combine"] = "U";
+    kv_mp["query_0_0_temp_table.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1.children"] = "query_0_0_temp_table_1_1:127.0.0.1|query_0_0_temp_table_1_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1.combine"] = "query_0_0_temp_table_1_1.book_publisher_id = query_0_0_temp_table_1_2.publisher_id";
+    kv_mp["query_0_0_temp_table_1.project"] = "book_title,customer_name,orders_quantity,publisher_name";
+    kv_mp["query_0_0_temp_table_1.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_1.children"] = "query_0_0_temp_table_1_1_1:127.0.0.1|query_0_0_temp_table_1_1_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1_1.combine"] = "query_0_0_temp_table_1_1_1.book_id = query_0_0_temp_table_1_1_2.orders_book_id";
+    kv_mp["query_0_0_temp_table_1_1.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_1_1.children"] = "query_0_0_temp_table_1_1_1_1:127.0.0.1|query_0_0_temp_table_1_1_1_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1_1_1.combine"] = "U";
+    kv_mp["query_0_0_temp_table_1_1_1.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_1_1_1.children"] = "site2_book";
+    kv_mp["query_0_0_temp_table_1_1_1_1.project"] = "id,publisher_id,title";
+    kv_mp["query_0_0_temp_table_1_1_1_1.select"] = "copies > 100";
+    kv_mp["query_0_0_temp_table_1_1_1_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_1_1_2.children"] = "site1_book";
+    kv_mp["query_0_0_temp_table_1_1_1_2.project"] = "id,publisher_id,title";
+    kv_mp["query_0_0_temp_table_1_1_1_2.select"] = "copies > 100";
+    kv_mp["query_0_0_temp_table_1_1_1_2.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_1_2.children"] = "query_0_0_temp_table_1_1_2_1:127.0.0.1|query_0_0_temp_table_1_1_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1_1_2.combine"] = "query_0_0_temp_table_1_1_2_1.customer_id = query_0_0_temp_table_1_1_2_2.orders_customer_id";
+    kv_mp["query_0_0_temp_table_1_1_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_1_2_1.children"] = "site1_customer";
+    kv_mp["query_0_0_temp_table_1_1_2_1.select"] = "id > 308000";
+    kv_mp["query_0_0_temp_table_1_1_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_1_2_2.children"] = "site3_orders";
+    kv_mp["query_0_0_temp_table_1_1_2_2.select"] = "quantity > 1";
+    kv_mp["query_0_0_temp_table_1_1_2_2.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_2.children"] = "query_0_0_temp_table_1_2_1:127.0.0.1|query_0_0_temp_table_1_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_1_2.combine"] = "U";
+    kv_mp["query_0_0_temp_table_1_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_1_2_1.children"] = "site1_publisher";
+    kv_mp["query_0_0_temp_table_1_2_1.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_1_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_1_2_2.children"] = "site3_publisher";
+    kv_mp["query_0_0_temp_table_1_2_2.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_1_2_2.type"] = "L";
+    kv_mp["query_0_0_temp_table_2.children"] = "query_0_0_temp_table_2_1:127.0.0.1|query_0_0_temp_table_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2.combine"] = "query_0_0_temp_table_2_1.book_publisher_id = query_0_0_temp_table_2_2.publisher_id";
+    kv_mp["query_0_0_temp_table_2.project"] = "book_title,customer_name,orders_quantity,publisher_name";
+    kv_mp["query_0_0_temp_table_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_1.children"] = "query_0_0_temp_table_2_1_1:127.0.0.1|query_0_0_temp_table_2_1_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_1.combine"] = "query_0_0_temp_table_2_1_1.book_id = query_0_0_temp_table_2_1_2.orders_book_id";
+    kv_mp["query_0_0_temp_table_2_1.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_1_1.children"] = "site3_book";
+    kv_mp["query_0_0_temp_table_2_1_1.project"] = "id,publisher_id,title";
+    kv_mp["query_0_0_temp_table_2_1_1.select"] = "copies > 100";
+    kv_mp["query_0_0_temp_table_2_1_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_1_2.children"] = "query_0_0_temp_table_2_1_2_1:127.0.0.1|query_0_0_temp_table_2_1_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_1_2.combine"] = "query_0_0_temp_table_2_1_2_1.customer_id = query_0_0_temp_table_2_1_2_2.orders_customer_id";
+    kv_mp["query_0_0_temp_table_2_1_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_1_2_1.children"] = "site1_customer";
+    kv_mp["query_0_0_temp_table_2_1_2_1.select"] = "id > 308000";
+    kv_mp["query_0_0_temp_table_2_1_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_1_2_2.children"] = "query_0_0_temp_table_2_1_2_2_1:127.0.0.1|query_0_0_temp_table_2_1_2_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_1_2_2.combine"] = "U";
+    kv_mp["query_0_0_temp_table_2_1_2_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_1_2_2_1.children"] = "site3_orders";
+    kv_mp["query_0_0_temp_table_2_1_2_2_1.select"] = "quantity > 1";
+    kv_mp["query_0_0_temp_table_2_1_2_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_1_2_2_2.children"] = "site4_orders";
+    kv_mp["query_0_0_temp_table_2_1_2_2_2.select"] = "quantity > 1";
+    kv_mp["query_0_0_temp_table_2_1_2_2_2.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_2.children"] = "query_0_0_temp_table_2_2_1:127.0.0.1|query_0_0_temp_table_2_2_2:127.0.0.1";
+    kv_mp["query_0_0_temp_table_2_2.combine"] = "U";
+    kv_mp["query_0_0_temp_table_2_2.type"] = "NL";
+    kv_mp["query_0_0_temp_table_2_2_1.children"] = "site1_publisher";
+    kv_mp["query_0_0_temp_table_2_2_1.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_2_2_1.type"] = "L";
+    kv_mp["query_0_0_temp_table_2_2_2.children"] = "site3_publisher";
+    kv_mp["query_0_0_temp_table_2_2_2.project"] = "id,name";
+    kv_mp["query_0_0_temp_table_2_2_2.type"] = "L";
+    load_temp_table(&channel, &cntl, kv_mp);
+    return 0;
+}
+
 int main(int argc, char* argv[]){
 
 //    load_query1_for_test();
 //    load_query2_for_test();
-    load_query9_for_test();
-
+    // load_query9_1_for_test();
+    load_query10_for_test();
     return 0;
 }

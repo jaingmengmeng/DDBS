@@ -299,7 +299,7 @@ temp_table read_temp_table_meta(const std::string &temp_table_name) {
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = "http";
-    options.timeout_ms = 2000;
+    options.timeout_ms = 20000;
     options.max_retry = 3;
     if (channel.Init(ETCD_GET_URL.c_str(), &options) != 0) {
         LOG(ERROR) << "Fail to initialize channel";
@@ -554,7 +554,7 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
         // 3.for non-leaf -> cascading rpc request(parallel channel)
     else {
 
-        LOG(INFO) << temp_table_name << "is a non-leaf node, begin to request it children";
+        LOG(INFO) << temp_table_name << " is a non-leaf node, begin to request it children";
 
         brpc::ParallelChannel channel;
         brpc::ParallelChannelOptions pchan_options;
@@ -664,11 +664,13 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     if (tb.project_expr.empty()) {
                         tb.project_expr = "*";
                     }
+                    // LOG(INFO) << "project of " << temp_table_name << ": " << tb.project_expr;
                     std::string sql = "select " + tb.project_expr + " from " + first_child_temp_table_name;
                     if (!tb.select_expr.empty()) {
                         sql += " where " + tb.select_expr;
                     }
                     sql += ";";
+                    // LOG(INFO) << "sql before execute of  " << temp_table_name << ": " << sql; 
                     int count = execute_query_sql(sql, first_child_temp_table_name, response, NON_LEAF);
                     if (count <= 0) {
                         cntl->SetFailed("empty result for sql: " + sql);
