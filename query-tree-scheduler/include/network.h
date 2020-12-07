@@ -6,6 +6,9 @@ int write_kv_to_etcd(const std::string& key, const std::string& value);
 int write_map_to_etcd(const std::unordered_map<std::string, std::string>& mp);
 std::string read_from_etcd_by_key(const std::string& key);
 std::unordered_map<std::string, std::string> read_from_etcd_by_prefix(const std::string& prefix);
+int delete_from_etcd_by_key(const std::string& key);
+int delete_from_etcd_by_prefix(const std::string& prefix);
+std::unordered_map<std::string, std::string> read_map_from_etcd(const std::vector<std::string>& keys);
 
 // rpc
 int load_table(const std::string& host, const std::string& table_name, const std::string& attr_meta, const std::vector<std::string>& attr_values);

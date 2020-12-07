@@ -11,7 +11,7 @@
 #include "ddb.pb.h"
 
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
-DEFINE_int32(timeout_ms, 2000, "RPC timeout in milliseconds");
+DEFINE_int32(timeout_ms, 3000000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_string(http_protocol, "http", "Client-side protocol");
 DEFINE_string(temp_table, "1-temp-table", "Temp table name.");
@@ -24,6 +24,7 @@ DEFINE_int32(interval_ms, 1000, "Milliseconds between consecutive requests");
 
 const std::string ETCD_PUT_URL = "http://127.0.0.1:2379/v3/kv/put";
 const std::string ETCD_GET_URL = "http://127.0.0.1:2379/v3/kv/range";
+const std::string ETCD_DELETE_URL = "http://127.0.0.1:2379/v3/kv/deleteRange";
 
 const std::string QUERY_PROCESSING_STATISTICS_PREFIX = "/query_processing_statistics";
 
@@ -108,10 +109,11 @@ nlohmann::json read_from_etcd(const std::string &key, bool prefix) {
     options.protocol = FLAGS_http_protocol;
     options.timeout_ms = FLAGS_timeout_ms;
     options.max_retry = FLAGS_max_retry;
+    nlohmann::json j;
 
     if (channel.Init(ETCD_GET_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
         LOG(ERROR) << "Fail to initialize channel";
-        return -1;
+        return j;
     }
 
     brpc::Controller cntl;
@@ -119,7 +121,6 @@ nlohmann::json read_from_etcd(const std::string &key, bool prefix) {
     cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
     cntl.http_request().uri() = ETCD_GET_URL;
 
-    nlohmann::json j;
     j["key"] = base64_encode(key);
     if (prefix) {
         j["range_end"] = base64_encode(get_range_end_for_prefix(key));
@@ -165,6 +166,90 @@ std::unordered_map<std::string, std::string> read_from_etcd_by_prefix(const std:
     }
     return mp;
 }
+
+int delete_from_etcd(const std::string& key, bool prefix){
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_http_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+
+    if (channel.Init(ETCD_DELETE_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return -1;
+    }
+
+    brpc::Controller cntl;
+
+    cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
+    cntl.http_request().uri() = ETCD_GET_URL;
+
+    nlohmann::json j;
+    j["key"] = base64_encode(key);
+    if (prefix) {
+        j["range_end"] = base64_encode(get_range_end_for_prefix(key));
+    }
+    cntl.request_attachment().append(j.dump());
+    channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+    if (cntl.Failed()) {
+        LOG(ERROR) << cntl.ErrorText();
+        return -1;
+    }
+    // j = nlohmann::json::parse(cntl.response_attachment().to_string());
+    return 0;
+}
+
+int delete_from_etcd_by_key(const std::string& key){
+    return delete_from_etcd(key, false);
+}
+int delete_from_etcd_by_prefix(const std::string& prefix){
+    return delete_from_etcd(prefix, true);
+}
+std::unordered_map<std::string, std::string> read_map_from_etcd(const std::vector<std::string>& keys){
+
+    std::unordered_map<std::string, std::string> mp;
+
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_http_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+    nlohmann::json j;
+
+    if (channel.Init(ETCD_GET_URL.c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return mp;
+    }
+
+    brpc::Controller cntl;
+
+    for(const std::string& key : keys){
+        cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
+        cntl.http_request().uri() = ETCD_GET_URL;
+
+        j["key"] = base64_encode(key);
+        cntl.request_attachment().append(j.dump());
+        channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
+        if (cntl.Failed()) {
+            LOG(ERROR) << cntl.ErrorText();
+            return mp;
+        }
+        j.clear();
+        j = nlohmann::json::parse(cntl.response_attachment().to_string());
+
+        if (j != NULL) {
+            std::string temp = j["count"];
+            int count = std::stoi(temp);
+            if (count > 0) {
+                temp = j["kvs"][0]["value"];
+                mp[key] =  base64_decode(temp);
+            }
+        }   
+    }
+    return mp;
+}
+
+
 
 // rpc
 int load_table(const std::string& host, const std::string& table_name, const std::string& attr_meta, const std::vector<std::string>& attr_values){

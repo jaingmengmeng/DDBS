@@ -35,7 +35,7 @@ DEFINE_int32(max_concurrency, 0, "Limit of request processing in parallel");
 
 // conf for client
 DEFINE_string(load_balancer, "", "The algorithm for load balancing");
-DEFINE_int32(timeout_ms, 300000, "RPC timeout in milliseconds");
+DEFINE_int32(timeout_ms, 3000000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_string(protocol, "baidu_std", "Client-side protocol");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
