@@ -41,7 +41,7 @@ int get_site_no(){
 //    printf("Current Host Name: %s\n", host);
 //    printf("Host IP: %s\n", IP);
     std::string ip = IP;
-    if (ip == "10.77.70.72"){
+    if (ip == "10.77.70.172"){
         return 1;
     } else if (ip == "10.77.70.188"){
         return 2;
