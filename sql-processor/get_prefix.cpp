@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <unistd.h>
+// #include <unistd.h>
 #include <errno.h>
-#include <netdb.h>
+// #include <netdb.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <arpa/inet.h>
+#include <winsock.h>
 
 void check_host_name(int hostname) { //This function returns host name for local computer
     if (hostname == -1) {

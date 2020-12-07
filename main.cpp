@@ -8,6 +8,8 @@
 #include "data-loader/DataLoader.h"
 #include "utils/utils.h"
 #include "network-utils/network.h"
+#include "sql-processor/SQLSelectProcessor.cpp"
+#include "sql-processor/get_prefix.cpp"
 
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
@@ -29,13 +31,13 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
         // select
         if(processor.sql_type == 1) {
             SelectStatement select_stat = processor.select;
-            map<string,string> select_tree;
-            vector<Relation> rs;
+            std::map<std::string, std::string> select_tree;
+            std::vector<Relation> rs;
             for(int i=0;i<relations.size();i++){
-                   rs.push_back(*relations[i]);
+                rs.push_back(*relations[i]);
             }
-            string prefix = get_prefix();
-            get_query_tree(select_tree,rs,select_stat,prefix); //get result in select_tree
+            std::string prefix = get_prefix();
+            get_query_tree(select_tree, rs, select_stat, prefix); //get result in select_tree
             // [TODO]
         }
         // insert

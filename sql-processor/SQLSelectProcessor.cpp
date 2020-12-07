@@ -9,6 +9,13 @@
 #include <algorithm>
 #include <set>
 #include <sstream>
+
+#include "../data-loader/Attribute.h"
+#include "../data-loader/Fragment.h"
+#include "../data-loader/Predicate.h"
+#include "../data-loader/Relation.h"
+#include "SelectStatement.h"
+
 using namespace std;
 //变量名小写，类名每个单词开头都大写,函数名和变量名一样
 const int INF = 2147483647; //take the maximum of int as INF
