@@ -58,7 +58,7 @@ int write_kv_to_etcd(const std::string& key, const std::string& value){
     }
     return 0;
 }
-int write_map_to_etcd(const std::unordered_map<std::string, std::string>& mp){
+int write_map_to_etcd(const std::map<std::string, std::string>& mp){
     brpc::Channel channel;
     brpc::ChannelOptions options;
     options.protocol = FLAGS_http_protocol;
@@ -205,9 +205,9 @@ int delete_from_etcd_by_key(const std::string& key){
 int delete_from_etcd_by_prefix(const std::string& prefix){
     return delete_from_etcd(prefix, true);
 }
-std::unordered_map<std::string, std::string> read_map_from_etcd(const std::vector<std::string>& keys){
+std::map<std::string, std::string> read_map_from_etcd(const std::vector<std::string>& keys){
 
-    std::unordered_map<std::string, std::string> mp;
+    std::map<std::string, std::string> mp;
 
     brpc::Channel channel;
     brpc::ChannelOptions options;
@@ -350,8 +350,8 @@ std::vector<std::string> request_table(const std::string& temp_table_name){
 
     return result;
 }
-std::unordered_map<std::string, std::string> get_request_statistics(const std::vector<std::string>& temp_table_names){
-    std::unordered_map<std::string, std::string> mp;
+std::map<std::string, std::string> get_request_statistics(const std::vector<std::string>& temp_table_names){
+    std::map<std::string, std::string> mp;
 
     brpc::Channel channel;
     brpc::ChannelOptions options;
@@ -373,7 +373,7 @@ std::unordered_map<std::string, std::string> get_request_statistics(const std::v
         cntl.http_request().uri() = ETCD_GET_URL;
 
         // latency
-        j["key"] = base64_encode(QUERY_PROCESSING_STATISTICS_PREFIX + "/" + temp_table_name + "/latency");
+        j["key"] = base64_encode(temp_table_name + ".latency");
         cntl.request_attachment().append(j.dump());
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
         if (cntl.Failed()) {
@@ -398,7 +398,7 @@ std::unordered_map<std::string, std::string> get_request_statistics(const std::v
         cntl.http_request().uri() = ETCD_GET_URL;
 
         // communication cost
-        j["key"] = base64_encode(QUERY_PROCESSING_STATISTICS_PREFIX + "/" + temp_table_name + "/communication-cost");
+        j["key"] = base64_encode(temp_table_name + ".communication-cost");
         cntl.request_attachment().append(j.dump());
         channel.CallMethod(NULL, &cntl, NULL, NULL, NULL);
         if (cntl.Failed()) {

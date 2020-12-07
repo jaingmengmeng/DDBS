@@ -52,5 +52,5 @@ int get_site_no(){
 }
 
 std::string get_prefix(int auto_increment_id){
-	return "query_" + std::to_string(get_site_no()) + "_" + std::to_string()+"_";
+	return "query_" + std::to_string(get_site_no()) + "_" + std::to_string(auto_increment_id)+"_";
 }
