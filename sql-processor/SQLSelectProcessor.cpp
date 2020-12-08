@@ -367,7 +367,7 @@ void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_f
             break;
             }         
         }
-        output_for_etcd.insert(pair<string, string>(key_head+"combine",table_name1+tn.join[0]+" = "+table_name2+tn.join[1]));
+        output_for_etcd.insert(pair<string, string>(key_head+"combine",prefix+table_name1+tn.join[0]+" = "+prefix+table_name2+tn.join[1]));
     }
     else if(tn.node_type==3){ //union node
         output_for_etcd.insert(pair<string, string>(key_head+"type","NL"));
