@@ -348,7 +348,7 @@ void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_f
     if(tn.node_type==1){
         output_for_etcd.insert(pair<string, string>(key_head+"type","L")); //fragment node
         string lchild;
-        lchild.append("site"+tn.sname.substr(1,1)+"_"+tn.rname);
+        lchild.append("site"+tn.sname.substr(4,1)+"_"+tn.rname);
         output_for_etcd.insert(pair<string, string>(key_head+"children",lchild)); //fragment node        
     } 
     else if(tn.node_type==2){
