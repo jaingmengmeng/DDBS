@@ -515,7 +515,7 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
             relations[i].frags[j].fname=relations[i].frags[j].fname.substr(0,3)+relations[i].frags[j].fname.substr(relations[i].frags[j].fname.length()-1,1);
         }
         for(j=0;j<relations[i].attributes.size();j++){
-            relations[i].attributes[j].aname=relations[i].rname+relations[i].attributes[j].aname;
+            relations[i].attributes[j].aname=relations[i].rname+"_"+relations[i].attributes[j].aname;
         }
     }
 
