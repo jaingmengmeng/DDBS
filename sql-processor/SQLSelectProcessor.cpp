@@ -348,7 +348,7 @@ void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_f
     if(tn.node_type==1){
         output_for_etcd.insert(pair<string, string>(key_head+"type","L")); //fragment node
         string lchild;
-        lchild.append("site"+tn.sname.substr(1,1)+"_"+tn.rname);
+        lchild.append("site"+tn.sname.substr(4,1)+"_"+tn.rname);
         output_for_etcd.insert(pair<string, string>(key_head+"children",lchild)); //fragment node        
     } 
     else if(tn.node_type==2){
@@ -495,10 +495,10 @@ void label_layer(Tree& query_tree_return,int root){
 }
 
 void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relations,SelectStatement sql,string prefix){
-    siteno_to_ip.insert(pair<string, string>("site1","10.77.70.172"));
-    siteno_to_ip.insert(pair<string, string>("site2","10.77.70.188"));
-    siteno_to_ip.insert(pair<string, string>("site3","10.77.70.189"));
-    siteno_to_ip.insert(pair<string, string>("site4","10.77.70.189"));
+    siteno_to_ip.insert(pair<string, string>("s1","10.77.70.172"));
+    siteno_to_ip.insert(pair<string, string>("s2","10.77.70.188"));
+    siteno_to_ip.insert(pair<string, string>("s3","10.77.70.189"));
+    siteno_to_ip.insert(pair<string, string>("s4","10.77.70.189"));
     //void initialization(vector<Relation>& relations,SelectStatement& sql);
     //initialization(relations,sql);
     //string prefix="query_0_0_";
