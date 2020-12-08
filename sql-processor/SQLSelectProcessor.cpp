@@ -504,7 +504,7 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
     //string prefix="query_0_0_";
     //Suppose all these have been assigned value properly
 
-    string query_site = "s" + prefix.substr(6,1); //发出请求的机器的站点号，假设从1开始计数
+    string query_site = "site" + prefix.substr(6,1); //发出请求的机器的站点号，假设从1开始计数
     //get query_site
     Tree query_tree;
     Tree query_tree_return;

@@ -31,7 +31,8 @@ query(q), relations(relations) {
                                 if(this->exist_relation(rname)) {
                                     std::vector<std::string> anames = this->get_anames(rname);
                                     for(auto aname : anames) {
-                                        this->select.add_select(rname + std::string("_") + lower_string(aname));
+                                        // this->select.add_select(rname + std::string("_") + lower_string(aname));
+                                        this->select.add_select(lower_string(aname));
                                     }
                                 } else {
                                     // the relation does not exist.
@@ -45,7 +46,8 @@ query(q), relations(relations) {
                                     if(this->exist_relation(rname)) {
                                         std::vector<std::string> anames = this->get_anames(rname);
                                         for(auto aname : anames) {
-                                            this->select.add_select(rname + std::string("_") + lower_string(aname));
+                                            // this->select.add_select(rname + std::string("_") + lower_string(aname));
+                                            this->select.add_select(lower_string(aname));
                                         }
                                     } else {
                                         // the relation does not exist.
@@ -69,7 +71,8 @@ query(q), relations(relations) {
                             if(this->exist_relation(rname)) {
                                 aname = lower_string(expr->getName());
                                 if(this->exist_attribute(rname, aname)) {
-                                    this->select.add_select(lower_string(rname) + std::string("_") + lower_string(aname));
+                                    // this->select.add_select(lower_string(rname) + std::string("_") + lower_string(aname));
+                                    this->select.add_select(lower_string(aname));
                                 } else {
                                     // the attribute does not exist.
                                     this->is_valid = false;
