@@ -348,7 +348,7 @@ void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_f
     if(tn.node_type==1){
         output_for_etcd.insert(pair<string, string>(key_head+"type","L")); //fragment node
         string lchild;
-        lchild.append("site"+tn.sname.substr(1,1)+"_"+tn.rname);
+        lchild.append("site"+tn.sname.substr(4,1)+"_"+tn.rname);
         output_for_etcd.insert(pair<string, string>(key_head+"children",lchild)); //fragment node        
     } 
     else if(tn.node_type==2){
@@ -503,6 +503,20 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
     //initialization(relations,sql);
     //string prefix="query_0_0_";
     //Suppose all these have been assigned value properly
+    int i,j,k,ii,jj,kk; //circulation variable
+    for(i=0;i<relations.size();i++){
+        for(j=0;j<relations[i].frags.size();j++){
+            for(k=0;k<relations[i].frags[j].vf_condition.size();k++){
+                relations[i].frags[j].vf_condition[k]=relations[i].rname+"_"+relations[i].frags[j].vf_condition[k];
+            }
+            for(k=0;k<relations[i].frags[j].hf_condition.size();k++){
+                relations[i].frags[j].hf_condition[k].aname=relations[i].rname+"_"+relations[i].frags[j].hf_condition[k].aname;
+            }
+        }
+        for(j=0;j<relations[i].attributes.size();j++){
+            relations[i].attributes[j].aname=relations[i].rname+relations[i].attributes[j].aname;
+        }
+    }
 
     string query_site = "site" + prefix.substr(6,1); //发出请求的机器的站点号，假设从1开始计数
     //get query_site
@@ -510,7 +524,6 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
     Tree query_tree_return;
     query_tree.n=0;
     //generate required query_tree
-    int i,j,k,ii,jj,kk; //circulation variable
 
     vector<Relation> pat_relat; //participant_relations
     for(i=0;i<sql.from.size();i++){
@@ -843,7 +856,7 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
        }
    }
    if(process_sites.size()==0){
-       process_sites[0]=best_ps;
+       process_sites.push_back(best_ps);
    }
    //determine k: is this site a processing site?
 
