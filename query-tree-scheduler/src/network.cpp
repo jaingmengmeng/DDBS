@@ -357,7 +357,7 @@ std::vector<std::string> request_table(const std::string& temp_table_name){
         LOG(INFO) << "Received response from " << cntl->remote_side() << "\nLatency(us): " << cntl->latency_us();
 //        std::cout << "Result meta: " << response->attr_meta() << std::endl;
 //        std::cout << "Result: " << std::endl;
-        result.emplace_back(response->attr_meta());
+        // result.emplace_back(response->attr_meta());
         for (int i = 0; i < response->attr_values_size(); ++i) {
 //            std::cout << response->attr_values(i) << std::endl;
             result.emplace_back(response->attr_values(i));
