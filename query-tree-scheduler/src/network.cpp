@@ -196,7 +196,7 @@ int delete_from_etcd(const std::string& key, bool prefix){
     brpc::Controller cntl;
 
     cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
-    cntl.http_request().uri() = ETCD_GET_URL;
+    cntl.http_request().uri() = ETCD_DELETE_URL;
 
     nlohmann::json j;
     j["key"] = base64_encode(key);
