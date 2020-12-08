@@ -24,7 +24,7 @@ DEFINE_int32(interval_ms, 1000, "Milliseconds between consecutive requests");
 
 const std::string ETCD_PUT_URL = "http://127.0.0.1:2379/v3/kv/put";
 const std::string ETCD_GET_URL = "http://127.0.0.1:2379/v3/kv/range";
-const std::string ETCD_DELETE_URL = "http://127.0.0.1:2379/v3/kv/deleteRange";
+const std::string ETCD_DELETE_URL = "http://127.0.0.1:2379/v3/kv/deleterange";
 
 const std::string QUERY_PROCESSING_STATISTICS_PREFIX = "/query_processing_statistics";
 
