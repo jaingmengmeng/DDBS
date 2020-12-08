@@ -49,22 +49,34 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
             for(auto iter : select_tree){
                 temp_tables.insert(iter.first.substr(0, iter.first.find('.')));
             }
-            std::string root_temp_table = *temp_tables.cbegin();
+            std::string root_temp_table = *(temp_tables.cbegin());
+            std::cout << "root: " << root_temp_table << std::endl;
             std::vector<std::string> rows = request_table(root_temp_table);
             for(const std::string& row : rows){
                 std::cout << row << std::endl;
             }
             std::cout << "total: " << rows.size() << " rows" << std::endl;
             std::vector<std::string> v(temp_tables.cbegin(), temp_tables.cend());
-            std::map<std::string, std::string> statistics = get_request_statistics(v);
-            // latency and cc
-            long latency = std::stol(statistics.cbegin()->first) / 1000000.0;
-            long cc = 0;
-            for(auto iter : statistics){
-                cc += std::stol(iter.second);
+            try
+            {
+                std::map<std::string, std::string> statistics = get_request_statistics(v);
+                // latency and cc
+                std::string lm = statistics[root_temp_table];
+                // std::cout << "root temp table lm: " << lm << std::endl;
+                long latency = std::stol(lm.substr(0, lm.find(',')));
+                long cc = 0;
+                for(auto iter : statistics){
+                    // std::cout << iter.first << ": " << iter.second << std::endl;
+                    cc += std::stol(iter.second.substr(iter.second.find(',') + 1));
+                }
+                std::cout << "latency(MS): " << latency / 1000.0 << std::endl;
+                std::cout << "communication cost(KB): " << cc / 1000.0 << std::endl;
             }
-            std::cout << "latency(MS): " << latency << std::endl;
-            std::cout << "communication cost(KB): " << cc / 1000.0 << std::endl;
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+
             // delete query tree in etcd
             delete_from_etcd_by_prefix(root_temp_table);
         }

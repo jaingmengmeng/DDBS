@@ -525,9 +525,16 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
     // 1.read meta of requested table
     //int unique_query_id = request->unique_query_id();
     const std::string& temp_table_name = request->temp_table_name();
-    temp_table tb = read_temp_table_meta(temp_table_name);
-
     LOG(INFO) << "received request for " << temp_table_name;
+
+    temp_table tb = read_temp_table_meta(temp_table_name);
+    if (tb.ret_code == -1)
+    {
+        LOG(INFO) << "no valid information for: " << temp_table_name;
+        cntl->SetFailed("no valid information for: " + temp_table_name);
+        return;
+    }
+    
 
     // 2.for leaf -> executing sql
     if (tb.type == LEAF) {

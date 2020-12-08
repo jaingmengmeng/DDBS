@@ -1,5 +1,8 @@
 #include <vector>
 #include <unordered_map>
+#include <map>
+#include <string>
+#include <vector>
 
 // etcd
 int write_kv_to_etcd(const std::string& key, const std::string& value);

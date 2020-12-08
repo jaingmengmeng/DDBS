@@ -14,7 +14,7 @@ DEFINE_string(load_balancer, "", "The algorithm for load balancing");
 DEFINE_int32(timeout_ms, 3000000, "RPC timeout in milliseconds");
 DEFINE_int32(max_retry, 3, "Max retries(not including the first RPC)");
 DEFINE_string(http_protocol, "http", "Client-side protocol");
-DEFINE_string(temp_table, "1-temp-table", "Temp table name.");
+// DEFINE_string(temp_table, "1-temp-table", "Temp table name.");
 DEFINE_string(rpc_protocol, "baidu_std", "Protocol type. Defined in src/brpc/options.proto");
 DEFINE_string(connection_type, "", "Connection type. Available values: single, pooled, short");
 DEFINE_string(server, "0.0.0.0:8000", "IP Address of server");
@@ -131,8 +131,22 @@ nlohmann::json read_from_etcd(const std::string &key, bool prefix) {
         LOG(ERROR) << cntl.ErrorText();
         return NULL;
     }
+    if (cntl.Failed()) {
+        LOG(ERROR) << cntl.ErrorText();
+        return NULL;
+    }
     j.clear();
-    j = nlohmann::json::parse(cntl.response_attachment().to_string());
+    std::string temp = cntl.response_attachment().to_string();
+    // cntl.Reset();
+//    LOG(INFO) << "read " << key << " from etcd, receives " << temp;
+    j = nlohmann::json::parse(temp);
+    if (j["count"].type_name() == "null"){
+        return NULL;
+    }
+    temp = j["count"];
+    if (std::stoi(temp) == 0){
+        return NULL;
+    }
     return j;
 }
 
@@ -234,17 +248,19 @@ std::map<std::string, std::string> read_map_from_etcd(const std::vector<std::str
             LOG(ERROR) << cntl.ErrorText();
             return mp;
         }
-        j.clear();
-        j = nlohmann::json::parse(cntl.response_attachment().to_string());
 
-        if (j != NULL) {
-            std::string temp = j["count"];
-            int count = std::stoi(temp);
-            if (count > 0) {
+        std::string temp = cntl.response_attachment().to_string();
+    //    LOG(INFO) << "read " << key << " from etcd, receives " << temp;
+        j = nlohmann::json::parse(temp);
+        if (j["count"].type_name() != "null"){
+            temp = j["count"];
+            if (std::stoi(temp) != 0){
                 temp = j["kvs"][0]["value"];
                 mp[key] =  base64_decode(temp);
             }
-        }   
+        }
+        
+        cntl.Reset();   
     }
     return mp;
 }
@@ -327,7 +343,7 @@ std::vector<std::string> request_table(const std::string& temp_table_name){
         TableResponse* response = new TableResponse;
 
         TableRequest request;
-        request.set_temp_table_name(FLAGS_temp_table);
+        request.set_temp_table_name(temp_table_name);
 
 //        google::protobuf::Closure* done = brpc::NewCallback(
 //                &HandleRequestTableResponse, cntl, response);
@@ -346,6 +362,19 @@ std::vector<std::string> request_table(const std::string& temp_table_name){
 //            std::cout << response->attr_values(i) << std::endl;
             result.emplace_back(response->attr_values(i));
         }
+
+        write_kv_to_etcd(temp_table_name + ".latency", std::to_string(cntl->latency_us()));
+        write_kv_to_etcd(temp_table_name + ".communication-cost", std::to_string(0));
+
+                // delete root temp table
+        cntl->Reset();
+        DeleteTempTableResponse* delete_response = new DeleteTempTableResponse;
+        DeleteTempTableRequest delete_request;
+        delete_request.set_temp_table_name(temp_table_name);
+        stub.DeleteTable(cntl, &delete_request, delete_response, NULL);
+        // todo(1203 by swh) : handle statistics(show, delete)
+
+        std::cout << "Result count: " << response->attr_values().size() << std::endl;
     }
 
     return result;
@@ -367,6 +396,8 @@ std::map<std::string, std::string> get_request_statistics(const std::vector<std:
     brpc::Controller cntl;
     nlohmann::json j;
     for(const std::string& temp_table_name : temp_table_names){
+
+        // LOG(INFO) << "read latency and communication-cost of " << temp_table_name;
         std::string lm;
 
         cntl.http_request().set_method(brpc::HTTP_METHOD_POST);
@@ -380,15 +411,15 @@ std::map<std::string, std::string> get_request_statistics(const std::vector<std:
             LOG(ERROR) << cntl.ErrorText();
             continue;
         }
-        j = nlohmann::json::parse(cntl.response_attachment().to_string());
-        if (j != NULL) {
-            std::string temp = j["count"];
-            int count = std::stoi(temp);
-            if (count > 0) {
-                for (int i = 0; i < count; ++i) {
-                    temp = j["kvs"][i]["value"];
-                    lm = base64_decode(temp);
-                }
+        std::string temp = cntl.response_attachment().to_string();
+        j = nlohmann::json::parse(temp);
+        // LOG(INFO) << "latency of " << temp_table_name << ": ";
+        // LOG(INFO) << j.dump();
+        if (j["count"].type_name() != "null"){
+            temp = j["count"];
+            if (std::stoi(temp) != 0){
+                temp = j["kvs"][0]["value"];
+                lm = base64_decode(temp);
             }
         }
 
@@ -405,18 +436,22 @@ std::map<std::string, std::string> get_request_statistics(const std::vector<std:
             LOG(ERROR) << cntl.ErrorText();
             continue;
         }
-        j = nlohmann::json::parse(cntl.response_attachment().to_string());
-        if (j != NULL) {
-            std::string temp = j["count"];
-            int count = std::stoi(temp);
-            if (count > 0) {
-                for (int i = 0; i < count; ++i) {
-                    temp = j["kvs"][i]["value"];
-                    lm += "," + base64_decode(temp);
-                }
+        temp = cntl.response_attachment().to_string();
+        j = nlohmann::json::parse(temp);
+
+        // LOG(INFO) << "communication-cost of " << temp_table_name << ": ";
+        // LOG(INFO) << j.dump();
+
+        if (j["count"].type_name() != "null"){
+            temp = j["count"];
+            if (std::stoi(temp) != 0){
+                temp = j["kvs"][0]["value"];
+                lm += "," + base64_decode(temp);
             }
         }
         mp[temp_table_name] = lm;
+        cntl.Reset();
+        j.clear();
     }
     return mp;
 }

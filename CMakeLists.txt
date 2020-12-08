@@ -8,6 +8,10 @@ add_subdirectory(sql-processor)
 # 添加 data-loader 子目录
 add_subdirectory(data-loader)
 
+add_subdirectory(query-tree-scheduler)
+
+add_subdirectory(network-utils)
+
 # network-utils
 set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../third-party)
 find_library(NETWORK_LIB NAMES network-utils)
