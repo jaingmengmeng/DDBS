@@ -43,6 +43,11 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
             }
             std::string prefix = get_prefix(auto_increment_id++);
             get_query_tree(select_tree, rs, select_stat, prefix); //get result in select_tree
+            std::map<std::string, std::string>::reverse_iterator iter;
+            for(iter = select_tree.rbegin(); iter != select_tree.rend(); iter++){
+                std::cout << iter->first << " " << iter->second << std::endl;
+            }
+            /*
             // [TODO]
             write_map_to_etcd(select_tree);
             std::set<std::string> temp_tables;
@@ -79,6 +84,7 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
 
             // delete query tree in etcd
             delete_from_etcd_by_prefix(root_temp_table);
+            */
         }
         // insert
         else if(processor.sql_type == 2) {
