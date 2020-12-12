@@ -16,7 +16,7 @@
 
 int auto_increment_id = 0;
 
-enum input_type {
+typedef enum INPUT_TYPE {
     QUIT,
     INIT,
     SHOW_TABLES,
@@ -107,7 +107,7 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     }
 }
 
-int input_classifier(std::string lower_input) {
+INPUT_TYPE input_classifier(std::string lower_input) {
     if(lower_input == "quit" || lower_input == "q" || lower_input == "exit") {
         return QUIT;
     } else if(lower_input == "init") {
