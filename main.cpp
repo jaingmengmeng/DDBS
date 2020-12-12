@@ -16,6 +16,16 @@
 
 int auto_increment_id = 0;
 
+enum input_type {
+    QUIT,
+    INIT,
+    SHOW_TABLES,
+    SHOW_FRAGMENTS,
+    SHOW_SITES,
+    HELP,
+    DEFINE_SITE,
+}
+
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
     split_string(q, query_list, ";");
@@ -97,21 +107,21 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     }
 }
 
-std::string input_classifier(std::string lower_input) {
+enum input_classifier(std::string lower_input) {
     if(lower_input == "quit" || lower_input == "q" || lower_input == "exit") {
-        return "quit";
+        return QUIT;
     } else if(lower_input == "init") {
-        return "init";
+        return INIT;
     } else if(lower_input == "show tables" || lower_input == "show tables;") {
-        return "show tables";
+        return SHOW_TABLES;
     } else if(lower_input == "show fragments" || lower_input == "show fragments;") {
-        return "show fragments";
+        return SHOW_FRAGMENTS;
     } else if(lower_input == "show sites" || lower_input == "show sites;") {
-        return "show sites";
+        return SHOW_SITES;
     } else if(lower_input == "help" || lower_input == "h") {
-        return "help";
+        return HELP;
     } else if(lower_input.substr(0, 11) == "define site") {
-        return "define site";
+        return DEFINE_SITE;
     }
 }
 
@@ -160,48 +170,48 @@ int main(int argc, char *argv[]) {
             query = trim(query);
             query = lower_string(query);
             switch (input_classifier(query)) {
-                case "define site":
+                case DEFINE_SITE:
                     std::vector<std::string> v_sites;
                     split_string(query.substr(query.find("define site")), v_sites, ",");
                     for(auto site : v_sites) {
                         data_loader.add_site(site);
                     }
                     break;
-                case "fragment":
-                    break;
-                case "allocate":
-                    break;
-                case "init":
+                // case "fragment":
+                //     break;
+                // case "allocate":
+                //     break;
+                case INIT:
                     data_loader.init();
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
                     break;
-                case "show tables":
+                case SHOW_TABLES:
                     data_loader.show_tables();
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
                     break;
-                case "show fragments":
+                case SHOW_FRAGMENTS:
                     data_loader.show_fragments();
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
                     break;
-                case "show sites":
+                case SHOW_TABLES:
                     data_loader.show_sites();
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
                     break;
-                case "help":
+                case HELP:
                     std::cout << help << std::endl;
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
                     break;
-                case "quit":
+                case QUIT:
                     std::cout << bye << std::endl;
                     return 0;
                 // insert; delete; select;
