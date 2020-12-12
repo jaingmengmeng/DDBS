@@ -169,62 +169,53 @@ int main(int argc, char *argv[]) {
             query += str;
             query = trim(query);
             query = lower_string(query);
-            switch (input_classifier(query)) {
-                case DEFINE_SITE:
-                    std::vector<std::string> v_sites;
-                    split_string(query.substr(query.find("define site")), v_sites, ",");
-                    for(auto site : v_sites) {
-                        data_loader.add_site(site);
-                    }
-                    break;
-                // case "fragment":
-                //     break;
-                // case "allocate":
-                //     break;
-                case INIT:
-                    data_loader.init();
-                    // initial variables
-                    query = "";
-                    std::cout << system+"> ";
-                    break;
-                case SHOW_TABLES:
-                    data_loader.show_tables();
-                    // initial variables
-                    query = "";
-                    std::cout << system+"> ";
-                    break;
-                case SHOW_FRAGMENTS:
-                    data_loader.show_fragments();
-                    // initial variables
-                    query = "";
-                    std::cout << system+"> ";
-                    break;
-                case SHOW_TABLES:
-                    data_loader.show_sites();
-                    // initial variables
-                    query = "";
-                    std::cout << system+"> ";
-                    break;
-                case HELP:
-                    std::cout << help << std::endl;
-                    // initial variables
-                    query = "";
-                    std::cout << system+"> ";
-                    break;
-                case QUIT:
-                    std::cout << bye << std::endl;
-                    return 0;
+            INPUT_TYPE input_type = input_classifier(query);
+            if(input_type == DEFINE_SITE) {
+                std::vector<std::string> v_sites;
+                split_string(query.substr(query.find("define site")), v_sites, ",");
+                for(auto site : v_sites) {
+                    data_loader.add_site(site);
+                }
+            } else if(input_type == INIT) {
+                // data_loader.init();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == SHOW_TABLES) {
+                // data_loader.show_tables();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == SHOW_FRAGMENTS) {
+                // data_loader.show_fragments();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == SHOW_TABLES) {
+                // data_loader.show_sites();
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == HELP) {
+                std::cout << help << std::endl;
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == QUIT) {
+                std::cout << bye << std::endl;
+                return 0;
+            } else {
                 // insert; delete; select;
-                default:
-                    if(query[query.size()-1] == ';') {
-                        // process the query statements
-                        solve_single_query(query, data_loader.relations);
-                        // initial variables
-                        query = "";
-                        std::cout << system+"> ";
-                    } else {
-                        std::cout << blank+"> ";
-                    }
+                if(query[query.size()-1] == ';') {
+                    // process the query statements
+                    solve_single_query(query, data_loader.relations);
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                } else {
+                    std::cout << blank+"> ";
+                }
+            }
             }
         }
     } else if(argc == 2) {
