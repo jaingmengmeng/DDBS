@@ -24,7 +24,7 @@ enum input_type {
     SHOW_SITES,
     HELP,
     DEFINE_SITE,
-}
+};
 
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
@@ -107,7 +107,7 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     }
 }
 
-enum input_classifier(std::string lower_input) {
+int input_classifier(std::string lower_input) {
     if(lower_input == "quit" || lower_input == "q" || lower_input == "exit") {
         return QUIT;
     } else if(lower_input == "init") {
