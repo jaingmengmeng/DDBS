@@ -16,7 +16,7 @@
 
 int auto_increment_id = 0;
 
-typedef enum INPUT_TYPE {
+enum INPUT_TYPE {
     QUIT,
     INIT,
     SHOW_TABLES,
