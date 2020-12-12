@@ -216,7 +216,6 @@ int main(int argc, char *argv[]) {
                     std::cout << blank+"> ";
                 }
             }
-            }
         }
     } else if(argc == 2) {
         std::ifstream fin(argv[1], std::ios_base::in);
