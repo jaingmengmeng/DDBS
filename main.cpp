@@ -18,7 +18,7 @@ int auto_increment_id = 0;
 
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     std::vector<std::string> query_list;
-    SplitString(q, query_list, ";");
+    split_string(q, query_list, ";");
     for(int i=0; i<query_list.size(); ++i) {
         std::string query = query_list[i];
         // std::cout << "[" << i << "] " << query << std::endl;
@@ -97,34 +97,52 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     }
 }
 
+std::string input_classifier(std::string lower_input) {
+    if(lower_input == "quit" || lower_input == "q" || lower_input == "exit") {
+        return "quit";
+    } else if(lower_input == "init") {
+        return "init";
+    } else if(lower_input == "show tables" || lower_input == "show tables;") {
+        return "show tables";
+    } else if(lower_input == "show fragments" || lower_input == "show fragments;") {
+        return "show fragments";
+    } else if(lower_input == "show sites" || lower_input == "show sites;") {
+        return "show sites";
+    } else if(lower_input == "help" || lower_input == "h") {
+        return "help";
+    } else if(lower_input.substr(0, 11) == "define site") {
+        return "define site";
+    }
+}
+
 int main(int argc, char *argv[]) {
     // [TODO] start statement
-    std::string logo =  "  _____  _____  ____   _____ \n"
-                        " |  __ \\|  __ \\|  _ \\ / ____|\n"
-                        " | |  | | |  | | |_) | (___  \n"
-                        " | |  | | |  | |  _ < \\___ \\ \n"
-                        " | |__| | |__| | |_) |____) |\n"
-                        " |_____/|_____/|____/|_____/ \n";
-    std::string start = "Welcome to the DDBS monitor.\n"
-                        "Commands end with `;`.\n"
-                        "Type `help` or `h` for help.\n"
-                        "For more information, visit: https://github.com/jaingmengmeng/DDBS\n";
-    std::string system = "ddbs";
-    std::string blank = "   -";
-    std::string bye = "Bye";
-    std::string command_help =  "Command Usage:\t 1) `./main`\n"
+    const std::string logo =    "  _____  _____  ____   _____ \n"
+                                " |  __ \\|  __ \\|  _ \\ / ____|\n"
+                                " | |  | | |  | | |_) | (___  \n"
+                                " | |  | | |  | |  _ < \\___ \\ \n"
+                                " | |__| | |__| | |_) |____) |\n"
+                                " |_____/|_____/|____/|_____/ \n";
+    const std::string start =   "Welcome to the DDBS monitor.\n"
+                                "Commands end with `;`.\n"
+                                "Type `help` or `h` for help.\n"
+                                "For more information, visit: https://github.com/jaingmengmeng/DDBS\n";
+    const std::string system = "ddbs";
+    const std::string blank = "   -";
+    const std::string bye = "Bye";
+    const std::string command_help =  "Command Usage:\t 1) `./main`\n"
                                 "\t\t 2) `./main <filename>`";
     // [TODO] help statement
-    std::string help =  "Usage:\t 1) `init`\n"
-                        "\t 2) `show tables[;]`\n"
-                        "\t 3) `load data[;]`\n"
-                        "\t 4) `help` or `h`\n"
-                        "\t 5) `select`\n"
-                        "\t 6) `insert`\n"
-                        "\t 7) `delete`\n"
-                        "\t 8) `quit` or `q` or `exit`\n";
-    std::string file_error = "Error opening file. Please check your filename.";
-    std::string query_error = "The SQL string is invalid!";
+    const std::string help =    "Usage:\t 1) `init`\n"
+                                "\t 2) `show tables[;]`\n"
+                                "\t 3) `load data[;]`\n"
+                                "\t 4) `help` or `h`\n"
+                                "\t 5) `select`\n"
+                                "\t 6) `insert`\n"
+                                "\t 7) `delete`\n"
+                                "\t 8) `quit` or `q` or `exit`\n";
+    const std::string file_error = "Error opening file. Please check your filename.";
+    const std::string query_error = "The SQL string is invalid!";
 
     std::string query = "";
     std::string str = "";
@@ -139,89 +157,64 @@ int main(int argc, char *argv[]) {
             if(query != "")
                 query += " ";
             query += str;
-            // transform(query.begin(), query.end(), query.begin(), ::tolower);
-            if(lower_string(query) == "quit" || lower_string(query) == "q" || lower_string(query) == "exit") {
-                std::cout << bye << std::endl;
-                return 0;
-            }
-            if(lower_string(query) == "init") {
-                data_loader.init();
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            if(lower_string(query) == "show tables" || lower_string(query) == "show tables;") {
-                data_loader.show_tables();
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            // load all fragmented data to all sites
-            if(lower_string(query) == "load data" || lower_string(query) == "load data;") {
-                for(auto site : data_loader.sites) {
-                    for(auto relation : data_loader.relations) {
-                        // Determine whether the relation table is assigned to the current site
-                        if(relation->in_site(site.sname)) {
-                            std::vector<std::string> insert_values = data_loader.import_fragmented_data(site.sname, relation->rname);
-                            std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(site.sname));
-                            int res = load_table(site.get_url(), site.sname+std::string("_")+relation->rname, attr_meta, insert_values);
-                            // std::cout << res << std::endl;
-                        }
+            query = trim(query);
+            query = lower_string(query);
+            switch (input_classifier(query)) {
+                case "define site":
+                    std::vector<std::string> v_sites;
+                    split_string(query.substr(query.find("define site")), v_sites, ",");
+                    for(auto site : v_sites) {
+                        data_loader.add_site(site);
                     }
-                }
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            // load all fragmented data to one site
-            if(lower_string(query) == "load all frag data" || lower_string(query) == "load all frag data;") {
-                for(auto site : data_loader.sites) {
-                    for(auto relation : data_loader.relations) {
-                        // Determine whether the relation table is assigned to the current site
-                        if(relation->in_site(site.sname)) {
-                            std::vector<std::string> insert_values = data_loader.import_fragmented_data(site.sname, relation->rname);
-                            std::string attr_meta = combine_vector_string(relation->get_fragmented_attrs_meta(site.sname));
-                            int res = load_table("127.0.0.1:8000", site.sname+std::string("_")+relation->rname, attr_meta, insert_values);
-                            // std::cout << res << std::endl;
-                        }
+                    break;
+                case "fragment":
+                    break;
+                case "allocate":
+                    break;
+                case "init":
+                    data_loader.init();
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                    break;
+                case "show tables":
+                    data_loader.show_tables();
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                    break;
+                case "show fragments":
+                    data_loader.show_fragments();
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                    break;
+                case "show sites":
+                    data_loader.show_sites();
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                    break;
+                case "help":
+                    std::cout << help << std::endl;
+                    // initial variables
+                    query = "";
+                    std::cout << system+"> ";
+                    break;
+                case "quit":
+                    std::cout << bye << std::endl;
+                    return 0;
+                // insert; delete; select;
+                default:
+                    if(query[query.size()-1] == ';') {
+                        // process the query statements
+                        solve_single_query(query, data_loader.relations);
+                        // initial variables
+                        query = "";
+                        std::cout << system+"> ";
+                    } else {
+                        std::cout << blank+"> ";
                     }
-                }
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            // load all global data to one site
-            if(lower_string(query) == "load all global data" || lower_string(query) == "load all global data;") {
-                for(auto relation : data_loader.relations) {
-                    std::vector<std::string> insert_values = data_loader.import_data(relation->rname);
-                    std::string attr_meta = combine_vector_string(relation->get_attrs_meta());
-                    int res = load_table("127.0.0.1:8000", relation->rname, attr_meta, insert_values);
-                    // std::cout << res << std::endl;
-                }
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            if(lower_string(query) == "help" || lower_string(query) == "h") {
-                std::cout << help << std::endl;
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-                continue;
-            }
-            if(str[str.size()-1] == ';') {
-                // process the query statements
-                solve_single_query(query, data_loader.relations);
-                // initial variables
-                query = "";
-                std::cout << system+"> ";
-            } else {
-                std::cout << blank+"> ";
             }
         }
     } else if(argc == 2) {

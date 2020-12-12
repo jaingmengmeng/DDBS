@@ -201,7 +201,7 @@ void DataLoader::load_data() {
             while(std::getline(fin, str)) {
                 // 根据制表符分割字符串
                 std::vector<std::string> v_str;
-                SplitString(str, v_str, std::string("\t"));
+                split_string(str, v_str, std::string("\t"));
                 this->datas[relation->rname].push_back(v_str);
             }
             relation->set_num_of_recs(this->datas[relation->rname].size());
@@ -370,4 +370,13 @@ Relation* DataLoader::get_relation(std::string rname) {
         }
     }
     return nullptr;
+}
+
+void DataLoader::add_site(std::string site) {
+    site = trim(site);
+    std::string sname = site.substr(0, site.find_first_of(" ")-0);
+    std::string ip =  site.substr(site.find_first_of(" "), site.find_first_of(":")-site.find_first_of(" "));
+    std::string port =  site.substr(site.find(":"));
+    std::cout << sname << " " << ip << " " << port << std::endl;
+    this->sites.push_back(Site(sname, ip, port));
 }

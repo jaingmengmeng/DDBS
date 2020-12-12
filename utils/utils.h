@@ -7,7 +7,7 @@
 #include <iostream>
 
 // extern inline，这里必须设置为内联
-inline void SplitString(const std::string& s, std::vector<std::string>& v, const std::string& c) {
+inline void split_string(const std::string& s, std::vector<std::string>& v, const std::string& c) {
     std::string::size_type pos1, pos2;
     pos2 = s.find(c);
     pos1 = 0;
@@ -47,6 +47,14 @@ inline std::string combine_vector_string(const std::vector<std::string>& v) {
         res += v[i];
     }
     return res;
+}
+
+inline std::string trim(std::string s) {
+    if(!s.empty()) {
+        s.erase(0, s.find_first_not_of(" "));
+        s.erase(s.find_last_not_of(" ") + 1);
+    }
+    return s;
 }
 
 #endif

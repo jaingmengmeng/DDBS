@@ -30,6 +30,8 @@ public:
     std::vector<std::string> import_data(std::string rname);   // load global data to servers
     std::string import_fragmented_data_sql(std::string sname, std::string rname, std::string file_path="");    // load fragmented data to servers via sql
     std::string import_data_sql(std::string rname, std::string file_path="");    // load global data to servers via sql
+
+    void add_site(std::string site);
 };
 
 #endif
