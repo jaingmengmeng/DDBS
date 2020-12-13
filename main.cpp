@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
             INPUT_TYPE input_type = input_classifier(query);
             if(input_type == DEFINE_SITE) {
                 std::vector<std::string> v_sites;
-                boost::regex tmp_define_site("(define\\s+site\\s+)(.*)(;?)", boost::regex::icase);
+                boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)", boost::regex::icase);
                 query = boost::regex_replace(query, tmp_define_site, "$2");
                 std::cout << query << std::endl;
                 split_string(query, v_sites, ",");
