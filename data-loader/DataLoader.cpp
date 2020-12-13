@@ -385,5 +385,8 @@ void DataLoader::add_site(std::string site) {
 int DataLoader::read_site_num_from_etcd() {
     std::string site_num = read_from_etcd_by_key("ddbs/nums_of_sites");
     std::cout << site_num << std::endl;
-    return std::stoi(site_num);
+    if(site_num != "")
+        return std::stoi(site_num);
+    else
+        return 0;
 }
