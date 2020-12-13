@@ -117,19 +117,19 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex_constants::icase);
     boost::regex re_help("^h(elp)?\\s*;?$", boost::regex_constants::icase);
     boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", boost::regex_constants::icase);
-    if(std::regex_match(input, re_quit)) {
+    if(boost::regex_match(input, re_quit)) {
         return QUIT;
-    } else if(std::regex_match(input, re_init)) {
+    } else if(boost::regex_match(input, re_init)) {
         return INIT;
-    } else if(std::regex_match(input, re_show_tables)) {
+    } else if(boost::regex_match(input, re_show_tables)) {
         return SHOW_TABLES;
-    } else if(std::regex_match(input, re_show_fragments)) {
+    } else if(boost::regex_match(input, re_show_fragments)) {
         return SHOW_FRAGMENTS;
-    } else if(std::regex_match(input, re_show_sites)) {
+    } else if(boost::regex_match(input, re_show_sites)) {
         return SHOW_SITES;
-    } else if(std::regex_match(input, re_help)) {
+    } else if(boost::regex_match(input, re_help)) {
         return HELP;
-    } else if(std::regex_match(input, re_define_site)) {
+    } else if(boost::regex_match(input, re_define_site)) {
         return DEFINE_SITE;
     } else {
         return SQL_STATE;
