@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 2.9.10)
 set(CMAKE_CXX_STANDARD 11)
 project(main C CXX)
 
-set(BOOST_ROOT /usr/local/boost) // 设置boost库搜索路径
-set(Boost_NO_SYSTEM_PATHS ON) // 只搜索上语句设置的搜索路径
+set(BOOST_ROOT /usr/local/boost)
+set(Boost_NO_SYSTEM_PATHS ON)
 find_package(Boost COMPONENTS regex REQUIRED)
 
 # 添加 sql-processor 子目录
