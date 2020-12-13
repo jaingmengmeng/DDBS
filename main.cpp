@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <map>
 #include <set>
-#include <regex>
+#include <boost/regex.hpp>
 
 #include "sql-processor/SQLProcessor.h"
 #include "data-loader/DataLoader.h"
@@ -110,13 +110,13 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
 }
 
 INPUT_TYPE input_classifier(std::string input) {
-    std::regex re_quit("^((q(uit)?)|(e(xit)?))\\s*;?$", std::regex_constants::icase);
-    std::regex re_init("^init\\s*;?$", std::regex_constants::icase);
-    std::regex re_show_tables("^show\\s+tables\\s*;?$", std::regex_constants::icase);
-    std::regex re_show_fragments("^show\\s+fragments\\s*;?$", std::regex_constants::icase);
-    std::regex re_show_sites("^show\\s+sites\\s*;?$", std::regex_constants::icase);
-    std::regex re_help("^h(elp)?\\s*;?$", std::regex_constants::icase);
-    std::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", std::regex_constants::icase);
+    boost::regex re_quit("^((q(uit)?)|(e(xit)?))\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_init("^init\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_show_tables("^show\\s+tables\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_show_fragments("^show\\s+fragments\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_help("^h(elp)?\\s*;?$", boost::regex_constants::icase);
+    boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", boost::regex_constants::icase);
     if(std::regex_match(input, re_quit)) {
         return QUIT;
     } else if(std::regex_match(input, re_init)) {
