@@ -18,8 +18,11 @@
 
 using namespace std;
 //变量名小写，类名每个单词开头都大写,函数名和变量名一样
+#define use_transport_optimization 0 //0: not use, 1:use
+
 const int INF = 2147483647; //take the maximum of int as INF
 map<string,string> siteno_to_ip;
+
 
 class TNAttribute{
 public:
@@ -549,7 +552,8 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
        else { //其它类
            pat_attri_name.push_back(sql.where[i].aname);
        }
-    } //find participant_attribute_name e.g.customer_name book_copies. Notice that repetition may exist
+    } 
+    //find participant_attribute_name e.g.customer_name book_copies. Notice that repetition may exist
 
     vector<Attribute> pat_attri;
     for(i=0;i<pat_attri_name.size();i++){
@@ -797,10 +801,12 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
     }
     //join vertical fragments
 
-    int max_r_size=0;
+   int max_r_size=0;
    string max_r;
    bool is_joined_vf=false;
+   vector<string> process_sites;
    string ps;
+#if  use_transport_optimization
    for(i=0;i<query_tree.n;i++){
        if(query_tree.tn[i].parent==-1){
            if(query_tree.tn[i].node_type==2&&query_tree.tn[i].tn_size>max_r_size){
@@ -825,7 +831,6 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
        }
    } 
    //find Rp
-   vector<string> process_sites;
    int least_difference=INF;
    string best_ps;
    if(is_joined_vf==true){
@@ -860,6 +865,23 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
        process_sites.push_back(best_ps);
    }
    //determine k: is this site a processing site?
+#else
+    for(i=0;i<query_tree.tn.size();i++){
+        if(query_tree.tn[i].node_type==1){ //chose the first fragment as Rp and processing site
+            if(query_tree.tn[i].parent!=-1){ 
+                is_joined_vf=true;
+                max_r = query_tree.tn[i].fname.substr(0,3);
+                process_sites.push_back(query_tree.tn[query_tree.tn[i].parent].sname);
+            }
+            else{
+                is_joined_vf=false;
+                max_r = query_tree.tn[i].fname.substr(0,3);
+                process_sites.push_back(query_tree.tn[i].sname);
+            }
+            break;
+        }
+    }
+#endif
 
    for(i=0;i<sql.where.size();i++){
        if(sql.where[i].op_type==7){
