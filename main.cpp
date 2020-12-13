@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
             if(input_type == DEFINE_SITE) {
                 std::vector<std::string> v_sites;
                 boost::regex tmp_define_site("(define\\s+site\\s+)(.*)(;?)", boost::regex::icase);
-                query = boost::regex_replace(query, tmp_define_site, "$2")
+                query = boost::regex_replace(query, tmp_define_site, "$2");
                 split_string(query.substr(11), v_sites, ",");
                 for(auto site : v_sites) {
                     data_loader.add_site(site);
