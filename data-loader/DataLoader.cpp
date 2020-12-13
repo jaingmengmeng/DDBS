@@ -375,8 +375,15 @@ Relation* DataLoader::get_relation(std::string rname) {
 void DataLoader::add_site(std::string site) {
     site = trim(site);
     std::string sname = site.substr(0, site.find_first_of(" ")-0);
-    std::string ip =  site.substr(site.find_first_of(" "), site.find_first_of(":")-site.find_first_of(" "));
-    std::string port =  site.substr(site.find(":"));
+    std::string ip =  site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1);
+    std::string port =  site.substr(site.find(":")+1);
     std::cout << sname << " " << ip << " " << port << std::endl;
     this->sites.push_back(Site(sname, ip, port));
+    std::cout << this->read_site_num_from_etcd();
+}
+
+int DataLoader::read_site_num_from_etcd() {
+    std::string site_num = read_from_etcd_by_key("ddbs/nums_of_sites");
+    std::cout << site_num << std::endl;
+    return std::stoi(site_num);
 }

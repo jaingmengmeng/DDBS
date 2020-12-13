@@ -10,6 +10,7 @@
 #include "Site.h"
 #include "Relation.h"
 #include "../utils/utils.h"
+#include "../network-utils/network.h"
 
 class DataLoader {
 private:
@@ -32,6 +33,7 @@ public:
     std::string import_data_sql(std::string rname, std::string file_path="");    // load global data to servers via sql
 
     void add_site(std::string site);
+    int read_site_num_from_etcd();
 };
 
 #endif

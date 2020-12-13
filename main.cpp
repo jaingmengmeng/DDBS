@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <map>
 #include <set>
+#include <regex>
 
 #include "sql-processor/SQLProcessor.h"
 #include "data-loader/DataLoader.h"
@@ -24,6 +25,7 @@ enum INPUT_TYPE {
     SHOW_SITES,
     HELP,
     DEFINE_SITE,
+    SQL_STATE,
 };
 
 void solve_multi_query(std::string q, std::vector<Relation*> relations) {
@@ -107,21 +109,30 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
     }
 }
 
-INPUT_TYPE input_classifier(std::string lower_input) {
-    if(lower_input == "quit" || lower_input == "q" || lower_input == "exit") {
+INPUT_TYPE input_classifier(std::string input) {
+    std::regex re_quit("^((q(uit)?)|(e(xit)?))\\s*;?$", std::regex_constants::icase);
+    std::regex re_init("^init\\s*;?$", std::regex_constants::icase);
+    std::regex re_show_tables("^show\\s+tables\\s*;?$", std::regex_constants::icase);
+    std::regex re_show_fragments("^show\\s+fragments\\s*;?$", std::regex_constants::icase);
+    std::regex re_show_sites("^show\\s+sites\\s*;?$", std::regex_constants::icase);
+    std::regex re_help("^h(elp)?\\s*;?$", std::regex_constants::icase);
+    std::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", std::regex_constants::icase);
+    if(std::regex_match(input, re_quit)) {
         return QUIT;
-    } else if(lower_input == "init") {
+    } else if(std::regex_match(input, re_init)) {
         return INIT;
-    } else if(lower_input == "show tables" || lower_input == "show tables;") {
+    } else if(std::regex_match(input, re_show_tables)) {
         return SHOW_TABLES;
-    } else if(lower_input == "show fragments" || lower_input == "show fragments;") {
+    } else if(std::regex_match(input, re_show_fragments)) {
         return SHOW_FRAGMENTS;
-    } else if(lower_input == "show sites" || lower_input == "show sites;") {
+    } else if(std::regex_match(input, re_show_sites)) {
         return SHOW_SITES;
-    } else if(lower_input == "help" || lower_input == "h") {
+    } else if(std::regex_match(input, re_help)) {
         return HELP;
-    } else if(lower_input.substr(0, 11) == "define site") {
+    } else if(std::regex_match(input, re_define_site)) {
         return DEFINE_SITE;
+    } else {
+        return SQL_STATE;
     }
 }
 
@@ -168,14 +179,16 @@ int main(int argc, char *argv[]) {
                 query += " ";
             query += str;
             query = trim(query);
-            query = lower_string(query);
             INPUT_TYPE input_type = input_classifier(query);
             if(input_type == DEFINE_SITE) {
                 std::vector<std::string> v_sites;
-                split_string(query.substr(query.find("define site")), v_sites, ",");
+                split_string(query.substr(11), v_sites, ",");
                 for(auto site : v_sites) {
                     data_loader.add_site(site);
                 }
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
             } else if(input_type == INIT) {
                 // data_loader.init();
                 // initial variables
