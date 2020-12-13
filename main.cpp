@@ -110,13 +110,13 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
 }
 
 INPUT_TYPE input_classifier(std::string input) {
-    boost::regex re_quit("^((q(uit)?)|(e(xit)?))\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_init("^init\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_show_tables("^show\\s+tables\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_show_fragments("^show\\s+fragments\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_help("^h(elp)?\\s*;?$", boost::regex_constants::icase);
-    boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", boost::regex_constants::icase);
+    boost::regex re_quit("^((q(uit)?)|(e(xit)?))\\s*;?$", boost::regex::icase);
+    boost::regex re_init("^init\\s*;?$", boost::regex::icase);
+    boost::regex re_show_tables("^show\\s+tables\\s*;?$", boost::regex::icase);
+    boost::regex re_show_fragments("^show\\s+fragments\\s*;?$", boost::regex::icase);
+    boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex::icase);
+    boost::regex re_help("^h(elp)?\\s*;?$", boost::regex::icase);
+    boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
         return QUIT;
     } else if(boost::regex_match(input, re_init)) {
