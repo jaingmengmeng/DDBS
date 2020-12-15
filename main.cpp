@@ -25,6 +25,7 @@ enum INPUT_TYPE {
     SHOW_SITES,
     HELP,
     DEFINE_SITE,
+    CREATE_TABLE,
     SQL_STATE,
 };
 
@@ -116,7 +117,8 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_show_fragments("^show\\s+fragments\\s*;?$", boost::regex::icase);
     boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex::icase);
     boost::regex re_help("^h(elp)?\\s*;?$", boost::regex::icase);
-    boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?", boost::regex::icase);
+    boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?$", boost::regex::icase);
+    boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
         return QUIT;
     } else if(boost::regex_match(input, re_init)) {
@@ -131,6 +133,8 @@ INPUT_TYPE input_classifier(std::string input) {
         return HELP;
     } else if(boost::regex_match(input, re_define_site)) {
         return DEFINE_SITE;
+    } else if(boost::regex_match(input, re_create_table)) {
+        return CREATE_TABLE;
     } else {
         return SQL_STATE;
     }
@@ -187,8 +191,43 @@ int main(int argc, char *argv[]) {
                 query = boost::regex_replace(query, tmp_define_site, "$2");
                 split_string(query, v_sites, ",");
                 for(auto site : v_sites) {
-                    data_loader.add_site(site);
+                    // get sname, ip, port
+                    site = trim(site);
+                    std::string sname = trim(site.substr(0, site.find_first_of(" ")-0));
+                    std::string ip =  trim(site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1));
+                    std::string port =  trim(site.substr(site.find(":")+1));
+                    data_loader.add_site(sname, ip, port);
                 }
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == CREATE_TABLE) {
+                // delete the `create table` string
+                boost::regex tmp_create_table("(create\\s+table\\s+)([^;]+)(;?)", boost::regex::icase);
+                query = trim(boost::regex_replace(query, tmp_create_table, "$2"));
+                // get rname
+                std::string rname = query.substr(0, query.find_first_of(" ")-0);
+                // get attributes
+                std::vector<Attribute> attributes;
+                std::vector<std::string> v_attributes;
+                std::string attributes_str = query.substr(query.find_first_of("(")+1, query.find_last_of(")")-query.find_first_of("(")-1);
+                std::cout << attributes_str << std::endl;
+                split_string(attributes_str, v_attributes, ",");
+                for(auto attribute : v_attributes) {
+                    attribute = trim(attribute);
+                    std::cout << attribute << std::endl;
+                    std::vector<std::string> v_str;
+                    split_string(attribute, v_str, " ");
+                    for(auto& str : v_str) {
+                        str = trim(str);
+                        std::cout << "#" << str << "#" << std::endl;
+                    }
+                    bool is_key = v_str.size() == 3 && v_str[2] == "key";
+                    int type = (v_str[1] == "int") ? 1 : 2;
+                    std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
+                    attributes.push_back(Attribute(v_str[0], is_key, type));
+                }
+                data_loader.add_relation(rname, attributes);
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
@@ -198,7 +237,7 @@ int main(int argc, char *argv[]) {
                 query = "";
                 std::cout << system+"> ";
             } else if(input_type == SHOW_TABLES) {
-                // data_loader.show_tables();
+                data_loader.show_tables();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";

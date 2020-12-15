@@ -37,8 +37,11 @@ public:
 
     void show_sites();
     void get_sites();
-    void add_site(std::string site);
+    void add_site(std::string sname, std::string ip, std::string port);
     int read_site_num_from_etcd();
+
+    void add_relation(std::string rname, std::vector<Attribute> attributes);
+    int read_relation_num_from_etcd();
 };
 
 #endif

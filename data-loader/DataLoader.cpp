@@ -4,6 +4,9 @@ DataLoader::DataLoader() {
     this->key_map.insert(std::pair<std::string, std::string>("ddbs", "ddbs"));
     this->key_map.insert(std::pair<std::string, std::string>("site_num", "ddbs" + this->sep + "nums_of_sites"));
     this->key_map.insert(std::pair<std::string, std::string>("sites", "ddbs" + this->sep + "sites"));
+
+    this->key_map.insert(std::pair<std::string, std::string>("relation_num", "ddbs" + this->sep + "nums_of_relations"));
+    this->key_map.insert(std::pair<std::string, std::string>("relations", "ddbs" + this->sep + "relations"));
     this->get_sites();
 }
 
@@ -300,27 +303,23 @@ void DataLoader::get_sites() {
     }
 }
 
-void DataLoader::add_site(std::string site) {
-    // get sname, ip, port
-    site = trim(site);
-    std::string sname = trim(site.substr(0, site.find_first_of(" ")-0));
-    std::string ip =  trim(site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1));
-    std::string port =  trim(site.substr(site.find(":")+1));
+void DataLoader::add_site(std::string sname, std::string ip, std::string port) {
     // read_site_num_from_etcd
     int old_site_num = this->read_site_num_from_etcd();
     int new_site_num = old_site_num + 1;
-    // write_map_to_etcd
+    // build a key-value map
     std::map<std::string, std::string> m;
     m[this->key_map["site_num"]] = std::to_string(new_site_num);
     std::string prefix = this->key_map["sites"] + this->sep+std::to_string(old_site_num) + this->sep;
     m[prefix+"sname"] = sname;
     m[prefix+"ip"] = ip;
     m[prefix+"port"] = port;
+    // write_map_to_etcd
     if(write_map_to_etcd(m) == 0) {
         this->sites.push_back(Site(sname, ip, port));
-        std::cout << "Add site " << sname << " " << ip << ":" << port << " successfully.\n" << std::endl;
+        std::cout << "Add site " << sname << " successfully.\n" << std::endl;
     } else {
-        std::cout << "Add site failed.\n" << std::endl;
+        std::cout << "Add site " << sname << " failed.\n" << std::endl;
     }
 }
 
@@ -332,5 +331,43 @@ int DataLoader::read_site_num_from_etcd() {
     }
     else {
         return std::stoi(site_num);
+    }
+}
+
+int DataLoader::read_relation_num_from_etcd() {
+    std::string relation_num = read_from_etcd_by_key(this->key_map["relation_num"]);
+    if(relation_num == "") {
+        int result = write_kv_to_etcd(this->key_map["relation_num"], "0");
+        return 0;
+    }
+    else {
+        return std::stoi(relation_num);
+    }
+}
+
+void DataLoader::add_relation(std::string rname, std::vector<Attribute> attributes) {
+    // read_relation_num_from_etcd
+    int old_relation_num = this->read_relation_num_from_etcd();
+    int new_relation_num = old_relation_num + 1;
+    // build a key-value map
+    std::map<std::string, std::string> m;
+    m[this->key_map["relation_num"]] = std::to_string(new_relation_num);
+    std::string prefix = this->key_map["relations"] + this->sep + std::to_string(old_relation_num) + this->sep;
+    m[prefix+"rname"] = rname;
+    m[prefix+"is_horizontal"] = "true";
+    m[prefix+"num_of_recs"] = "0";
+    m[prefix+"num_of_attributes"] = std::to_string(attributes.size());
+    for(int i=0; i<attributes.size(); ++i) {
+        prefix = this->key_map["relations"] + this->sep + std::to_string(old_relation_num) + this->sep + "attributes" + this->sep + std::to_string(i) + this->sep;
+        m[prefix+"aname"] = attributes[i].aname;
+        m[prefix+"is_key"] = (attributes[i].is_key == true) ? "true" : "false";
+        m[prefix+"type"] = std::to_string(attributes[i].type);
+    }
+    // write_map_to_etcd
+    if(write_map_to_etcd(m) == 0) {
+        // this->relations.push_back(Relation(rname, attributes));
+        std::cout << "Add table " << rname << " successfully.\n" << std::endl;
+    } else {
+        std::cout << "Add table " << rname << " failed.\n" << std::endl;
     }
 }
