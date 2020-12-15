@@ -1,111 +1,19 @@
 #include "DataLoader.h"
 
 DataLoader::DataLoader() {
-    this->init();
+    this->key_map.insert(std::pair<std::string, std::string>("ddbs", "ddbs"));
+    this->key_map.insert(std::pair<std::string, std::string>("site_num", "ddbs" + this->sep + "nums_of_sites"));
+    this->key_map.insert(std::pair<std::string, std::string>("sites", "ddbs" + this->sep + "sites"));
+    this->get_sites();
 }
 
 void DataLoader::init() {
-    // initialize file_path;
-    this->files[std::string("book")] = std::string("../files/data/book.tsv");
-    this->files[std::string("customer")] = std::string("../files/data/customer.tsv");
-    this->files[std::string("orders")] = std::string("../files/data/orders.tsv");
-    this->files[std::string("publisher")] = std::string("../files/data/publisher.tsv");
-    this->sites.push_back(Site("site1", "10.77.70.172", "8000"));
-    this->sites.push_back(Site("site2", "10.77.70.188", "8000"));
-    this->sites.push_back(Site("site3", "10.77.70.189", "8000"));
-    this->sites.push_back(Site("site4", "10.77.70.189", "8000"));
-
-    // create Tables;
-    Relation* Book = new Relation(std::string("book"), true);
-    Relation* Customer = new Relation(std::string("customer"), false);
-    Relation* Orders = new Relation(std::string("orders"), true);
-    Relation* Publisher = new Relation(std::string("publisher"), true);
-    this->relations.push_back(Book);
-    this->relations.push_back(Customer);
-    this->relations.push_back(Orders);
-    this->relations.push_back(Publisher);
-
-    // add Attributes
-    Book->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{200001, 250000});
-    Book->add_attribute(std::string("title"), false, 2);
-    Book->add_attribute(std::string("authors"), false, 2);
-    Book->add_attribute(std::string("publisher_id"), false, 1, 1, std::vector<double>{300001, 315000});
-    Book->add_attribute(std::string("copies"), false, 1, 2, std::vector<double>{0, 10000});
-    // std::cout << *Book << std::endl;
-
-    Customer->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{300001, 315000});
-    Customer->add_attribute(std::string("name"), false, 2);
-    std::map<std::string, double> m; m["1"] = 0.4; m["2"] = 0.3; m["3"] = 0.3;
-    Customer->add_attribute(std::string("rank"), false, 1, 4, m);
-    // std::cout << *Customer << std::endl;
-
-    Orders->add_attribute(std::string("customer_id"), true, 1, 1, std::vector<double>{300001, 315000});
-    Orders->add_attribute(std::string("book_id"), true, 1, 1, std::vector<double>{200001, 250000});
-    Orders->add_attribute(std::string("quantity"), false, 1, 3, std::vector<double>{3, 2});
-    // std::cout << *Orders << std::endl;
-
-    Publisher->add_attribute(std::string("id"), true, 1, 1, std::vector<double>{100001, 105000});
-    Publisher->add_attribute(std::string("name"), false, 2);
-    std::map<std::string, double> m2; m2["PRC"] = 0.5; m2["USA"] = 0.3;
-    Publisher->add_attribute(std::string("nation"), false, 2, 4, m2);
-    // std::cout << *Publisher << std::endl;
-
-    // add Fragments
-    std::vector<Predicate> predicates;
-
-    predicates.clear();
-    predicates.push_back(Predicate(4, std::string("id"), 205000));
-    Book->add_fragment(std::string("Book"), std::string("book1"), std::string("site1"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("id"), 205000));
-    predicates.push_back(Predicate(4, std::string("id"), 210000));
-    Book->add_fragment(std::string("Book"), std::string("book2"), std::string("site2"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("id"), 210000));
-    Book->add_fragment(std::string("Book"), std::string("book3"), std::string("site3"), true, predicates);
-    // Book->print_fragments();
-
-    Customer->add_fragment(std::string("Customer"), std::string("cus1"), std::string("site1"), false, std::vector<std::string>{std::string("id"), std::string("name")});
-    Customer->add_fragment(std::string("Customer"), std::string("cus2"), std::string("site2"), false, std::vector<std::string>{std::string("id"), std::string("rank")});
-    // Customer->print_fragments();
-
-    predicates.clear();
-    predicates.push_back(Predicate(4, std::string("customer_id"), 307000));
-    predicates.push_back(Predicate(4, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord1"), std::string("site1"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(4, std::string("customer_id"), 307000));
-    predicates.push_back(Predicate(1, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord2"), std::string("site2"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("customer_id"), 307000));
-    predicates.push_back(Predicate(4, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord3"), std::string("site3"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("customer_id"), 307000));
-    predicates.push_back(Predicate(1, std::string("book_id"), 215000));
-    Orders->add_fragment(std::string("Orders"), std::string("ord4"), std::string("site4"), true, predicates);
-    // Orders->print_fragments();
-
-    predicates.clear();
-    predicates.push_back(Predicate(4, std::string("id"), 104000));
-    predicates.push_back(Predicate(6, std::string("nation"), std::string("PRC")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub1"), std::string("site1"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(4, std::string("id"), 104000));
-    predicates.push_back(Predicate(6, std::string("nation"), std::string("USA")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub2"), std::string("site2"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("id"), 104000));
-    predicates.push_back(Predicate(6, std::string("nation"), std::string("PRC")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub3"), std::string("site3"), true, predicates);
-    predicates.clear();
-    predicates.push_back(Predicate(1, std::string("id"), 104000));
-    predicates.push_back(Predicate(6, std::string("nation"), std::string("USA")));
-    Publisher->add_fragment(std::string("Publisher"), std::string("pub4"), std::string("site4"), true, predicates);
-    // Publisher->print_fragments();
-
-    this->load_data();
+    if(delete_from_etcd_by_prefix(this->key_map["ddbs"]) == 0) {
+        this->sites.clear();
+        std::cout << "Init successfully.\n" << std::endl;
+    } else {
+        std::cout << "Init failed.\n" << std::endl;
+    }
 }
 
 void DataLoader::show_tables(bool show_fragment) {
@@ -372,21 +280,57 @@ Relation* DataLoader::get_relation(std::string rname) {
     return nullptr;
 }
 
+void DataLoader::show_sites() {
+    for(auto site : this->sites) {
+        std::cout << site << std::endl;
+    }
+    std::cout << std::endl;
+}
+
+void DataLoader::get_sites() {
+    int site_num = this->read_site_num_from_etcd();
+    std::string prefix = this->key_map["sites"];
+    std::unordered_map<std::string, std::string> site_info = read_from_etcd_by_prefix(prefix);
+    for(int i=0; i<site_num; ++i) {
+        prefix = this->key_map["sites"] + this->sep+std::to_string(i) + this->sep;
+        std::string sname = site_info[prefix+"sname"];
+        std::string ip = site_info[prefix+"ip"];
+        std::string port = site_info[prefix+"port"];
+        this->sites.push_back(Site(sname, ip, port));
+    }
+}
+
 void DataLoader::add_site(std::string site) {
+    // get sname, ip, port
     site = trim(site);
-    std::string sname = site.substr(0, site.find_first_of(" ")-0);
-    std::string ip =  site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1);
-    std::string port =  site.substr(site.find(":")+1);
-    std::cout << sname << " " << ip << " " << port << std::endl;
-    this->sites.push_back(Site(sname, ip, port));
-    std::cout << this->read_site_num_from_etcd();
+    std::string sname = trim(site.substr(0, site.find_first_of(" ")-0));
+    std::string ip =  trim(site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1));
+    std::string port =  trim(site.substr(site.find(":")+1));
+    // read_site_num_from_etcd
+    int old_site_num = this->read_site_num_from_etcd();
+    int new_site_num = old_site_num + 1;
+    // write_map_to_etcd
+    std::map<std::string, std::string> m;
+    m[this->key_map["site_num"]] = std::to_string(new_site_num);
+    std::string prefix = this->key_map["sites"] + this->sep+std::to_string(old_site_num) + this->sep;
+    m[prefix+"sname"] = sname;
+    m[prefix+"ip"] = ip;
+    m[prefix+"port"] = port;
+    if(write_map_to_etcd(m) == 0) {
+        this->sites.push_back(Site(sname, ip, port));
+        std::cout << "Add site " << sname << " " << ip << ":" << port << " successfully.\n" << std::endl;
+    } else {
+        std::cout << "Add site failed.\n" << std::endl;
+    }
 }
 
 int DataLoader::read_site_num_from_etcd() {
-    std::string site_num = read_from_etcd_by_key("ddbs/nums_of_sites");
-    std::cout << site_num << std::endl;
-    if(site_num != "")
-        return std::stoi(site_num);
-    else
+    std::string site_num = read_from_etcd_by_key(this->key_map["site_num"]);
+    if(site_num == "") {
+        int result = write_kv_to_etcd(this->key_map["site_num"], "0");
         return 0;
+    }
+    else {
+        return std::stoi(site_num);
+    }
 }

@@ -14,6 +14,9 @@
 
 class DataLoader {
 private:
+    std::string sep = "/";
+    std::map<std::string, std::string> key_map;
+
     std::map<std::string, std::vector<std::vector<std::string>>> data_fragment(Relation* relation);
     Relation* get_relation(std::string rname);
 public:
@@ -32,6 +35,8 @@ public:
     std::string import_fragmented_data_sql(std::string sname, std::string rname, std::string file_path="");    // load fragmented data to servers via sql
     std::string import_data_sql(std::string rname, std::string file_path="");    // load global data to servers via sql
 
+    void show_sites();
+    void get_sites();
     void add_site(std::string site);
     int read_site_num_from_etcd();
 };

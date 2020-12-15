@@ -183,8 +183,8 @@ int main(int argc, char *argv[]) {
             if(input_type == DEFINE_SITE) {
                 std::vector<std::string> v_sites;
                 boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)", boost::regex::icase);
+                // delete the `define site` string
                 query = boost::regex_replace(query, tmp_define_site, "$2");
-                std::cout << query << std::endl;
                 split_string(query, v_sites, ",");
                 for(auto site : v_sites) {
                     data_loader.add_site(site);
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
                 query = "";
                 std::cout << system+"> ";
             } else if(input_type == INIT) {
-                // data_loader.init();
+                data_loader.init();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
@@ -207,8 +207,8 @@ int main(int argc, char *argv[]) {
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
-            } else if(input_type == SHOW_TABLES) {
-                // data_loader.show_sites();
+            } else if(input_type == SHOW_SITES) {
+                data_loader.show_sites();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
