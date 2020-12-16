@@ -614,6 +614,6 @@ int main(int argc, char* argv[]){
 //    load_query1_for_test();
 //    load_query2_for_test();
     // load_query9_1_for_test();
-    load_query10_server_for_test();
+    load_query10_for_test();
     return 0;
 }

@@ -389,30 +389,6 @@ temp_table read_temp_table_meta(const std::string &temp_table_name) {
     return tb;
 }
 
-int delete_temp_table(std::unordered_map<std::string, std::string> children){
-
-    for(auto iter = children.cbegin(); iter != children.cend(); iter++){
-        // A Channel represents a communication line to a Server. Notice that
-        // Channel is thread-safe and can be shared by all threads in your program.
-        brpc::Channel channel;
-
-        // Initialize the channel, NULL means using default options.
-        brpc::ChannelOptions options;
-        options.protocol = FLAGS_protocol;
-        options.connection_type = FLAGS_connection_type;
-        options.timeout_ms = FLAGS_timeout_ms/*milliseconds*/;
-        options.max_retry = FLAGS_max_retry;
-        if (channel.Init(iter->second.c_str(), FLAGS_load_balancer.c_str(), &options) != 0) {
-            LOG(ERROR) << "Fail to initialize channel";
-            return -1;
-        }
-
-        // Normally, you should not call a Channel directly, but instead construct
-        // a stub Service wrapping it. stub can be shared by all threads as well.
-
-    }
-
-}
 
 class MyCallMapper : public brpc::CallMapper {
 public:
@@ -447,13 +423,11 @@ private:
 
 class MyResponseMerger : public brpc::ResponseMerger {
 public:
-//    MyResponseMerger(bool mIsUnion, std::string mTempTableName) : m_is_union(mIsUnion),
-//                                                                  m_temp_table_name(std::move(mTempTableName)) {}
+    MyResponseMerger(bool mIsUnion, const std::string &mTempTableName, const std::string &mIndexAttr) : m_is_union(
+            mIsUnion), m_temp_table_name(mTempTableName), m_index_attr(mIndexAttr) {}
 
-    MyResponseMerger(bool mIsUnion, std::string mTempTableName, bool mIsQuery) : m_is_union(mIsUnion),
-                                                                                        m_temp_table_name(std::move(
-                                                                                                mTempTableName)),
-                                                                                        m_is_query(mIsQuery) {}
+    MyResponseMerger(bool mIsUnion, const std::string &mTempTableName) : m_is_union(mIsUnion),
+                                                                         m_temp_table_name(mTempTableName) {}
 
 public:
     Result Merge(google::protobuf::Message *response, const google::protobuf::Message *sub_response) override {
@@ -473,7 +447,7 @@ public:
                 std::string drop_table_sql = "drop table if exists `" + m_temp_table_name + "`;";
                 // todo : handle sql execution failure
                 execute_non_query_sql(drop_table_sql);
-                std::string create_table_sql = "create table `" + m_temp_table_name + "` ( " + tableResponse->attr_meta() +
+                std::string create_table_sql = "create table `" + m_temp_table_name + "` ( " + tableResponse->attr_meta() + ", " + "index (" + m_index_attr + ")"
                                                " ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
                 execute_non_query_sql(create_table_sql);
                 if (tableResponse->attr_values_size() == 0) {
@@ -497,7 +471,7 @@ public:
 private:
     bool m_is_union;
     std::string m_temp_table_name;
-    bool m_is_query;
+    std::string m_index_attr;
 };
 
 
@@ -578,12 +552,33 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
 
         // 3.1 request table from children
         std::string first_child_temp_table_name = tb.children.cbegin()->first;
+        // 3.1.1 get join attr for index
+        std::unordered_map<std::string, std::string> join_attrs;
+        if (!tb.is_union){
+            // left table
+            std::string temp = tb.join_expr.substr(0, tb.join_expr.find(' '));
+            int index = temp.find('.');
+            std::string key = temp.substr(0, index);
+            std::string value = temp.substr(index + 1);
+            join_attrs[key] = value;
+            // right table
+            temp = tb.join_expr.substr(tb.join_expr.find_last_of(' ') + 1);
+            index = temp.find('.');
+            key = temp.substr(0, index);
+            value = temp.substr(index + 1);
+            join_attrs[key] = value;
+        }
         std::vector<std::string> child_temp_table_names;
         for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
             LOG(INFO) << temp_table_name << " ---> " << iter->first;
             child_temp_table_names.emplace_back(iter->first);
             MyCallMapper *mapper = new MyCallMapper(iter->first, true);
-            MyResponseMerger *merger = new MyResponseMerger(tb.is_union, iter->first, true);
+            MyResponseMerger *merger;
+            if (tb.is_union){
+                merger = new MyResponseMerger(tb.is_union, iter->first);
+            } else{
+                merger = new MyResponseMerger(tb.is_union, iter->first, join_attrs[iter->first]);
+            }
             brpc::Channel *sub_channel = new brpc::Channel;
             std::string server_addr = iter->second + ":8000";
             if (sub_channel->Init(server_addr.c_str(), &sub_options) != 0) {
