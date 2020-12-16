@@ -449,7 +449,7 @@ void DataLoader::add_relation(std::string rname, std::vector<Attribute> attribut
     }
     // write_map_to_etcd
     if(write_map_to_etcd(m) == 0) {
-        this->relations.push_back(Relation(rname, attributes, true, 0));
+        this->relations.push_back(Relation(rname, attributes));
         std::cout << "Add table " << rname << " successfully.\n" << std::endl;
     } else {
         std::cout << "Add table " << rname << " failed.\n" << std::endl;

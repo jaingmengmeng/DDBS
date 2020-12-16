@@ -1,6 +1,6 @@
 #include "Relation.h"
 
-Relation::Relation(std::string rname, bool is_horizontal=true, int num_of_recs=0) :
+Relation::Relation(std::string rname, bool is_horizontal, int num_of_recs) :
 rname(lower_string(rname)), is_horizontal(is_horizontal), num_of_recs(num_of_recs) {}
 
 Relation::Relation(std::string rname, std::vector<Attribute> attributes, bool is_horizontal, int num_of_recs) :
