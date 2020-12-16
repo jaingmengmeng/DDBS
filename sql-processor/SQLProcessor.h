@@ -32,11 +32,11 @@ public:
     SelectStatement select;
     InsertStatement insert;
     DeleteStatement delete_s;
-    std::vector<Relation*> relations;
+    std::vector<Relation> relations;
     int sql_type;   // 1:select 2:insert 3.delete
     bool is_valid;    // 判断sql中的表名、属性名是否有效
 
-    SQLProcessor(std::string q, std::vector<Relation*> relations);
+    SQLProcessor(std::string q, std::vector<Relation> relations);
 };
 
 #endif

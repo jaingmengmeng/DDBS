@@ -17,10 +17,10 @@ private:
     std::string sep = "/";
     std::map<std::string, std::string> key_map;
 
-    std::map<std::string, std::vector<std::vector<std::string>>> data_fragment(Relation* relation);
-    Relation* get_relation(std::string rname);
+    std::map<std::string, std::vector<std::vector<std::string>>> data_fragment(Relation relation);
+    Relation get_relation(std::string rname);
 public:
-    std::vector<Relation*> relations;
+    std::vector<Relation> relations;
     std::map<std::string, std::string> files;
     std::vector<Site> sites;
     std::map<std::string, std::vector<std::vector<std::string>>> datas; // relations
@@ -40,6 +40,7 @@ public:
     void add_site(std::string sname, std::string ip, std::string port);
     int read_site_num_from_etcd();
 
+    void get_relations();
     void add_relation(std::string rname, std::vector<Attribute> attributes);
     int read_relation_num_from_etcd();
 };

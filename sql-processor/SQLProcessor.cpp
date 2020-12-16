@@ -4,7 +4,7 @@
 
 #include "SQLProcessor.h"
 
-SQLProcessor::SQLProcessor(std::string q, std::vector<Relation*> relations) :
+SQLProcessor::SQLProcessor(std::string q, std::vector<Relation> relations) :
 query(q), relations(relations) {
     this->is_valid = true;  // the sql is valid by default.
     hsql::SQLParser::parseSQLString(this->query, &this->result);
@@ -305,8 +305,8 @@ std::string SQLProcessor::get_aname_from_expr(hsql::Expr* expr) {
 
 std::vector<std::string> SQLProcessor::get_anames(std::string rname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
-            return relation->get_anames();
+        if(relation.rname == rname) {
+            return relation.get_anames();
         }
     }
     return std::vector<std::string>{};
@@ -314,7 +314,7 @@ std::vector<std::string> SQLProcessor::get_anames(std::string rname) {
 
 bool SQLProcessor::exist_relation(std::string rname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
+        if(relation.rname == rname) {
             return true;
         }
     }
@@ -324,8 +324,8 @@ bool SQLProcessor::exist_relation(std::string rname) {
 
 bool SQLProcessor::exist_attribute(std::string rname, std::string aname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
-            for(auto attribute : relation->attributes) {
+        if(relation.rname == rname) {
+            for(auto attribute : relation.attributes) {
                 if(attribute.aname == aname) {
                     return true;
                 }

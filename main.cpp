@@ -29,7 +29,7 @@ enum INPUT_TYPE {
     SQL_STATE,
 };
 
-void solve_multi_query(std::string q, std::vector<Relation*> relations) {
+void solve_multi_query(std::string q, std::vector<Relation> relations) {
     std::vector<std::string> query_list;
     split_string(q, query_list, ";");
     for(int i=0; i<query_list.size(); ++i) {
@@ -42,7 +42,7 @@ void solve_multi_query(std::string q, std::vector<Relation*> relations) {
     }
 }
 
-void solve_single_query(std::string query, std::vector<Relation*> relations) {
+void solve_single_query(std::string query, std::vector<Relation> relations) {
     std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, relations);
     if (processor.is_valid) {
@@ -52,7 +52,7 @@ void solve_single_query(std::string query, std::vector<Relation*> relations) {
             std::map<std::string, std::string> select_tree;
             std::vector<Relation> rs;
             for(int i=0;i<relations.size();i++){
-                rs.push_back(*relations[i]);
+                rs.push_back(relations[i]);
             }
             std::string prefix = get_prefix(auto_increment_id++);
             get_query_tree(select_tree, rs, select_stat, prefix); //get result in select_tree
@@ -185,10 +185,10 @@ int main(int argc, char *argv[]) {
             query = trim(query);
             INPUT_TYPE input_type = input_classifier(query);
             if(input_type == DEFINE_SITE) {
-                std::vector<std::string> v_sites;
-                boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)", boost::regex::icase);
                 // delete the `define site` string
+                boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)", boost::regex::icase);
                 query = boost::regex_replace(query, tmp_define_site, "$2");
+                std::vector<std::string> v_sites;
                 split_string(query, v_sites, ",");
                 for(auto site : v_sites) {
                     // get sname, ip, port
@@ -196,6 +196,7 @@ int main(int argc, char *argv[]) {
                     std::string sname = trim(site.substr(0, site.find_first_of(" ")-0));
                     std::string ip =  trim(site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1));
                     std::string port =  trim(site.substr(site.find(":")+1));
+                    // add site
                     data_loader.add_site(sname, ip, port);
                 }
                 // initial variables
@@ -227,6 +228,7 @@ int main(int argc, char *argv[]) {
                     std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
                     attributes.push_back(Attribute(v_str[0], is_key, type));
                 }
+                // add relation
                 data_loader.add_relation(rname, attributes);
                 // initial variables
                 query = "";
