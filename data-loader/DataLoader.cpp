@@ -455,3 +455,12 @@ void DataLoader::add_relation(std::string rname, std::vector<Attribute> attribut
         std::cout << "Add table " << rname << " failed.\n" << std::endl;
     }
 }
+
+void DataLoader::add_fragment(Fragment f) {
+    this->temp_fragments.push_back(f);
+    std::cout << "Add fragment " << f.fname << " successfully. It will work after allocating.\n" << std::endl;
+}
+
+void DataLoader::allocate(std::string fname, std::string sname) {
+
+}

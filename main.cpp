@@ -26,6 +26,8 @@ enum INPUT_TYPE {
     HELP,
     DEFINE_SITE,
     CREATE_TABLE,
+    FRAGMENT,
+    ALLOCATE,
     SQL_STATE,
 };
 
@@ -118,7 +120,9 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex::icase);
     boost::regex re_help("^h(elp)?\\s*;?$", boost::regex::icase);
     boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?$", boost::regex::icase);
-    boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
+    boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
+    boost::regex re_fragment("^fragment\\s+[A-Za-z0-9]+\\s+(horizontally|vertically)\\s+into\\s+[^;]+\\s*;?$", boost::regex::icase);
+    boost::regex re_allocate("^allocate\\s+[A-Za-z0-9\\.]+\\s+to\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
         return QUIT;
     } else if(boost::regex_match(input, re_init)) {
@@ -135,6 +139,10 @@ INPUT_TYPE input_classifier(std::string input) {
         return DEFINE_SITE;
     } else if(boost::regex_match(input, re_create_table)) {
         return CREATE_TABLE;
+    } else if(boost::regex_match(input, re_fragment)) {
+        return FRAGMENT;
+    } else if(boost::regex_match(input, re_allocate)) {
+        return ALLOCATE;
     } else {
         return SQL_STATE;
     }
@@ -185,15 +193,16 @@ int main(int argc, char *argv[]) {
             query = trim(query);
             INPUT_TYPE input_type = input_classifier(query);
             if(input_type == DEFINE_SITE) {
+                query = lower_string(query);
                 // delete the `define site` string
-                boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)", boost::regex::icase);
+                boost::regex tmp_define_site("(define\\s+site\\s+)([^;]+)(;?)");
                 query = boost::regex_replace(query, tmp_define_site, "$2");
                 std::vector<std::string> v_sites;
                 split_string(query, v_sites, ",");
                 for(auto site : v_sites) {
                     // get sname, ip, port
                     site = trim(site);
-                    std::string sname = trim(site.substr(0, site.find_first_of(" ")-0));
+                    std::string sname = lower_string(trim(site.substr(0, site.find_first_of(" ")-0)));
                     std::string ip =  trim(site.substr(site.find_first_of(" ")+1, site.find_first_of(":")-site.find_first_of(" ")-1));
                     std::string port =  trim(site.substr(site.find(":")+1));
                     // add site
@@ -203,8 +212,9 @@ int main(int argc, char *argv[]) {
                 query = "";
                 std::cout << system+"> ";
             } else if(input_type == CREATE_TABLE) {
+                query = lower_string(query);
                 // delete the `create table` string
-                boost::regex tmp_create_table("(create\\s+table\\s+)([^;]+)(;?)", boost::regex::icase);
+                boost::regex tmp_create_table("(create\\s+table\\s+)([^;]+)(;?)");
                 query = trim(boost::regex_replace(query, tmp_create_table, "$2"));
                 // get rname
                 std::string rname = query.substr(0, query.find_first_of(" ")-0);
@@ -230,6 +240,64 @@ int main(int argc, char *argv[]) {
                 }
                 // add relation
                 data_loader.add_relation(rname, attributes);
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == FRAGMENT) {
+                // get is_horizontal & fragment conditions
+                boost::regex tmp_fragment("(fragment\\s+)([A-Za-z0-9]+\\s+)(horizontally|vertically)(\\s+into\\s+)([^;]+)(\\s*;?)");
+                std::string rname = lower_string(trim(boost::regex_replace(query, tmp_fragment, "$2")));
+                bool is_horizontal = (trim(boost::regex_replace(query, tmp_fragment, "$3")) == "horizontally") ? true : false;
+                std::string conditions = trim(boost::regex_replace(query, tmp_fragment, "$5"));
+                std::cout << conditions << std::endl;
+                // add fragments
+                if(is_horizontal) {
+                    std::vector<std::string> v_condition;
+                    split_string(conditions, v_condition, ",");
+                    for(int i=0; i<v_condition.size(); ++i) {
+                        std::string fname = rname+"."+std::to_string(i+1);
+                        std::vector<Predicate> hf_condition;
+                        std::vector<std::string> v_predicate;
+                        split_string(v_condition[i], v_predicate, "and");
+                        // build a fragment instance and add fragment
+                        for(int j=0; j<v_predicate.size(); ++j) {
+                            boost::regex tmp_predicate("([A-Za-z_]+\\s*)(>|>=|<|<=|=|<>)(\\s*[\"'A-Za-z0-9]+)");
+                            std::string aname = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$1"));
+                            std::string op = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$2"));
+                            std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
+                            std::cout << aname << " " << op << " " << value << "#" << std::endl;
+                            int op_type;
+                            if(value[0] == "'" || value[0] == "\"") {
+                                if(op == "=") op_type = 6;
+                                else if(op == "<>") op_type = 9;
+                                hf_condition.push_back(Predicate(op_type, aname, value.substr(1, value.size()-2)));
+                            } else {
+                                if(op == ">=") op_type = 1;
+                                else if(op == "<=") op_type = 2;
+                                else if(op == ">") op_type = 3;
+                                else if(op == "<") op_type = 4;
+                                else if(op == "=") op_type = 5;
+                                else if(op == "<>") op_type = 8;
+                                hf_condition.push_back(Predicate(op_type, aname, std::stod(value));
+                            }
+                        }
+                        data_loader.add_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
+                    }
+                } else {
+                    
+                }
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == ALLOCATE) {
+                query = lower_string(query);
+                // get fname & sname
+                boost::regex tmp_allocate("(allocate\\s+)([A-Za-z0-9\\.]+)(\\s+to\\s+)([A-Za-z0-9]+)(\\s*;?)");
+                std::string fname = trim(boost::regex_replace(query, tmp_allocate, "$2"));
+                std::string sname = trim(boost::regex_replace(query, tmp_allocate, "$4"));
+                std::cout << fname << " " << sname << "#" << std::endl;
+                // allocate the fragment to the site
+                data_loader.allocate(fname, sname);
                 // initial variables
                 query = "";
                 std::cout << system+"> ";

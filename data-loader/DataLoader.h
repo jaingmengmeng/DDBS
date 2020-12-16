@@ -23,6 +23,7 @@ public:
     std::vector<Relation> relations;
     std::map<std::string, std::string> files;
     std::vector<Site> sites;
+    std::vector<Fragment> temp_fragments;
     std::map<std::string, std::vector<std::vector<std::string>>> datas; // relations
     std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>> fragmented_datas;   // relations, sites
 
@@ -43,6 +44,9 @@ public:
     void get_relations();
     void add_relation(std::string rname, std::vector<Attribute> attributes);
     int read_relation_num_from_etcd();
+
+    void add_fragment(Fragment fragment);
+    void allocate(std::string fname, std::string sname);
 };
 
 #endif

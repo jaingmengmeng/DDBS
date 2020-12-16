@@ -21,6 +21,8 @@ public:
 
     Fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<std::string> vf_condition);
     Fragment(std::string rname, std::string fname, std::string sname, bool is_horizontal, std::vector<Predicate> hf_condition);
+    Fragment(std::string rname, std::string fname, bool is_horizontal, std::vector<std::string> vf_condition);
+    Fragment(std::string rname, std::string fname, bool is_horizontal, std::vector<Predicate> hf_condition);
 
     void set_num_of_recs(int n);
 };
