@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) {
                 boost::regex tmp_create_table("(create\\s+table\\s+)([^;]+)(;?)");
                 query = trim(boost::regex_replace(query, tmp_create_table, "$2"));
                 // get rname
-                std::string rname = query.substr(0, query.find_first_of(" ")-0);
+                std::string rname = trim(query.substr(0, query.find_first_of("(")));
                 // get attributes
                 std::vector<Attribute> attributes;
                 std::vector<std::string> v_attributes;
@@ -249,7 +249,6 @@ int main(int argc, char *argv[]) {
                 std::string rname = lower_string(trim(boost::regex_replace(query, tmp_fragment, "$2")));
                 bool is_horizontal = (trim(boost::regex_replace(query, tmp_fragment, "$3")) == "horizontally") ? true : false;
                 std::string conditions = trim(boost::regex_replace(query, tmp_fragment, "$5"));
-                std::cout << conditions << std::endl;
                 // add fragments
                 if(is_horizontal) {
                     std::vector<std::string> v_condition;
@@ -267,7 +266,7 @@ int main(int argc, char *argv[]) {
                             std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
                             std::cout << aname << " " << op << " " << value << "#" << std::endl;
                             int op_type;
-                            if(value[0] == "'" || value[0] == "\"") {
+                            if(value[0] == '\'' || value[0] == '"') {
                                 if(op == "=") op_type = 6;
                                 else if(op == "<>") op_type = 9;
                                 hf_condition.push_back(Predicate(op_type, aname, value.substr(1, value.size()-2)));
@@ -278,13 +277,30 @@ int main(int argc, char *argv[]) {
                                 else if(op == "<") op_type = 4;
                                 else if(op == "=") op_type = 5;
                                 else if(op == "<>") op_type = 8;
-                                hf_condition.push_back(Predicate(op_type, aname, std::stod(value));
+                                hf_condition.push_back(Predicate(op_type, aname, std::stod(value)));
                             }
                         }
-                        data_loader.add_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
+                        data_loader.add_temp_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
                     }
                 } else {
-                    
+                    std::vector<std::string> v_condition;
+                    while(conditions.find_first_of("(") != std::string::npos) {
+                        std::string tem_condition = conditions.substr(conditions.find_first_of("(")+1, conditions.find_first_of(")")-conditions.find_first_of("(")-1);
+                        v_condition.push_back(tem_condition);
+                        conditions = conditions.substr(conditions.find_first_of(")")+1);
+                    }
+                    for(int i=0; i<v_condition.size(); ++i) {
+                        std::string fname = rname+"."+std::to_string(i+1);
+                        std::vector<std::string> v_aname;
+                        v_condition[i] = trim(v_condition[i].substr(v_condition[i].find_first_of("(")+1, v_condition[i].find_first_of(")")-v_condition[i].find_first_of("(")-1));
+                        split_string(v_condition[i], v_aname, ",");
+                        std::vector<std::string> vf_condition;
+                        for(int j=0; j<v_aname.size(); ++j) {
+                            std::string aname = trim(v_aname[j]);
+                            vf_condition.push_back(aname);
+                        }
+                        data_loader.add_temp_fragment(Fragment(rname, fname, is_horizontal, vf_condition));
+                    }
                 }
                 // initial variables
                 query = "";

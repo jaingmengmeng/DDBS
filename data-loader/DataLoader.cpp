@@ -28,6 +28,7 @@ void DataLoader::show_tables(bool show_fragment) {
             relation.print_fragments();
         }
     }
+    std::cout << std::endl;
 }
 
 std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fragment(Relation relation) {
@@ -456,11 +457,78 @@ void DataLoader::add_relation(std::string rname, std::vector<Attribute> attribut
     }
 }
 
-void DataLoader::add_fragment(Fragment f) {
+void DataLoader::add_temp_fragment(Fragment f) {
     this->temp_fragments.push_back(f);
     std::cout << "Add fragment " << f.fname << " successfully. It will work after allocating.\n" << std::endl;
 }
 
-void DataLoader::allocate(std::string fname, std::string sname) {
+void DataLoader::add_fragment(Fragment f) {
+    std::unordered_map<std::string, std::string> relation_info = read_from_etcd_by_prefix(this->key_map["relations"]);
+    for(int i=0; i<this->relations.size(); ++i) {
+        if(this->relations[i].rname == f.rname) {
+            std::map<std::string, std::string> m;
+            std::string prefix = this->get_prefix_by_rname(f.rname);
+            int old_num_of_fragments = std::stoi(relation_info[prefix+"num_of_fragments"]);
+            int new_num_of_fragments = old_num_of_fragments + 1;
+            m[prefix+"is_horizontal"] = f.is_horizontal ? "true" : "false";
+            m[prefix+"num_of_fragments"] = std::to_string(new_num_of_fragments);
+            prefix = prefix + "fragments" + this->sep + std::to_string(old_num_of_fragments) + this->sep;
+            m[prefix+"fname"] = f.fname;
+            m[prefix+"rname"] = f.rname;
+            m[prefix+"sname"] = f.sname;
+            m[prefix+"is_horizontal"] = f.is_horizontal ? "true" : "false";
+            m[prefix+"num_of_recs"] = std::to_string(0);
+            if(f.is_horizontal) {
+                int num_of_hfc = f.hf_condition.size();
+                m[prefix+"num_of_hfc"] = std::to_string(num_of_hfc);
+                for(int j=0; j<num_of_hfc; ++j) {
+                    prefix = prefix+"hf_condition"+this->sep+std::to_string(j)+this->sep;
+                    int op_type = f.hf_condition[j].op_type;
+                    m[prefix+"op_type"] = op_type;
+                    m[prefix+"aname"] = f.hf_condition[j].aname;
+                    if(op_type == 6 || op_type == 9) {
+                        m[prefix+"str"] = f.hf_condition[j].str;
+                    } else {
+                        m[prefix+"num"] = std::to_string(f.hf_condition[j].num);
+                    }
+                }
+            } else {
+                int num_of_vfc = f.vf_condition.size();
+                m[prefix+"num_of_vfc"] = std::to_string(num_of_vfc);
+                for(int j=0; j<num_of_vfc; ++j) {
+                    m[prefix+"vf_condition"+this->sep+std::to_string(j)] = f.vf_condition[j];
+                }
+            }
+            if(write_map_to_etcd(m) == 0) {
+                this->relations[i].add_fragment(f);
+                std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " successfully.\n" << std::endl;
+            } else {
+                std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " failed.\n" << std::endl;
+            }
+            return;
+        } 
+    }
+}
 
+void DataLoader::allocate(std::string fname, std::string sname) {
+    for(auto f : this->temp_fragments) {
+        if(f.fname == fname) {
+            f.set_sname(sname);
+            this->add_fragment(f);
+            return;
+        }
+    }
+    std::cout << "There is no fragment named " << fname << ".\n" << std::endl;
+}
+
+std::string DataLoader::get_prefix_by_rname(std::string rname) {
+    int relation_num = this->read_relation_num_from_etcd();
+    std::unordered_map<std::string, std::string> relation_info = read_from_etcd_by_prefix(this->key_map["relations"]);
+    for(int i=0; i<relation_num; ++i) {
+        // get a instance of Relation
+        std::string prefix = this->key_map["relations"] + this->sep + std::to_string(i) + this->sep;
+        if(rname == relation_info[prefix+"rname"])
+            return prefix;
+    }
+    return "";
 }

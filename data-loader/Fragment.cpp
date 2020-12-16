@@ -35,3 +35,7 @@ std::ostream& operator<<(std::ostream& os, Fragment f) {
 void Fragment::set_num_of_recs(int n) {
     this->num_of_recs = n;
 }
+
+void Fragment::set_sname(std::string sname) {
+    this->sname = sname;
+}

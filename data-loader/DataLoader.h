@@ -45,8 +45,11 @@ public:
     void add_relation(std::string rname, std::vector<Attribute> attributes);
     int read_relation_num_from_etcd();
 
-    void add_fragment(Fragment fragment);
+    void add_temp_fragment(Fragment fragment);
     void allocate(std::string fname, std::string sname);
+    void add_fragment(Fragment fragment);
+
+    std::string get_prefix_by_rname(std::string rname);
 };
 
 #endif
