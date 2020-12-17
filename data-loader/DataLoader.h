@@ -5,6 +5,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <fstream>
 
 #include "Site.h"
@@ -23,7 +24,7 @@ public:
     std::vector<Relation> relations;
     std::map<std::string, std::string> files;
     std::vector<Site> sites;
-    std::vector<Fragment> temp_fragments;
+    std::unordered_map<std::string, Fragment> unallocated_fragments;
     std::map<std::string, std::vector<std::vector<std::string>>> datas; // relations
     std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>> fragmented_datas;   // relations, sites
 
@@ -45,9 +46,10 @@ public:
     void add_relation(std::string rname, std::vector<Attribute> attributes);
     int read_relation_num_from_etcd();
 
-    void add_temp_fragment(Fragment fragment);
+    void add_unallocated_fragment(Fragment fragment);
     void allocate(std::string fname, std::string sname);
     void add_fragment(Fragment fragment);
+    void show_unallocated_fragments();
 
     std::string get_prefix_by_rname(std::string rname);
 };

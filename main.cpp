@@ -16,6 +16,7 @@
 #include "sql-processor/get_prefix.cpp"
 
 int auto_increment_id = 0;
+DataLoader data_loader = DataLoader();
 
 enum INPUT_TYPE {
     QUIT,
@@ -31,33 +32,29 @@ enum INPUT_TYPE {
     SQL_STATE,
 };
 
-void solve_multi_query(std::string q, std::vector<Relation> relations) {
+void solve_multi_query(std::string q) {
     std::vector<std::string> query_list;
     split_string(q, query_list, ";");
     for(int i=0; i<query_list.size(); ++i) {
         std::string query = query_list[i];
         // std::cout << "[" << i << "] " << query << std::endl;
-        SQLProcessor processor = SQLProcessor(query, relations);
+        SQLProcessor processor = SQLProcessor(query, data_loader.relations);
         if (processor.is_valid) {
                    
         }
     }
 }
 
-void solve_single_query(std::string query, std::vector<Relation> relations) {
+void solve_single_query(std::string query) {
     std::cout << query << std::endl;
-    SQLProcessor processor = SQLProcessor(query, relations);
+    SQLProcessor processor = SQLProcessor(query, data_loader.relations);
     if (processor.is_valid) {
         // select
         if(processor.sql_type == 1) {
             SelectStatement select_stat = processor.select;
             std::map<std::string, std::string> select_tree;
-            std::vector<Relation> rs;
-            for(int i=0;i<relations.size();i++){
-                rs.push_back(relations[i]);
-            }
             std::string prefix = get_prefix(auto_increment_id++);
-            get_query_tree(select_tree, rs, select_stat, prefix); //get result in select_tree
+            get_query_tree(select_tree, data_loader.relations, select_stat, prefix); //get result in select_tree
             std::map<std::string, std::string>::reverse_iterator iter;
             for(iter = select_tree.rbegin(); iter != select_tree.rend(); iter++){
                 std::cout << iter->first << " " << iter->second << std::endl;
@@ -180,8 +177,6 @@ int main(int argc, char *argv[]) {
     std::string query = "";
     std::string str = "";
 
-    DataLoader data_loader = DataLoader();
-
     // read sql query from std input
     if(argc == 1) {
         std::cout << logo << std::endl << start << std::endl;
@@ -280,7 +275,7 @@ int main(int argc, char *argv[]) {
                                 hf_condition.push_back(Predicate(op_type, aname, std::stod(value)));
                             }
                         }
-                        data_loader.add_temp_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
+                        data_loader.add_unallocated_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
                     }
                 } else {
                     std::vector<std::string> v_condition;
@@ -299,7 +294,7 @@ int main(int argc, char *argv[]) {
                             std::string aname = trim(v_aname[j]);
                             vf_condition.push_back(aname);
                         }
-                        data_loader.add_temp_fragment(Fragment(rname, fname, is_horizontal, vf_condition));
+                        data_loader.add_unallocated_fragment(Fragment(rname, fname, is_horizontal, vf_condition));
                     }
                 }
                 // initial variables
@@ -328,7 +323,7 @@ int main(int argc, char *argv[]) {
                 query = "";
                 std::cout << system+"> ";
             } else if(input_type == SHOW_FRAGMENTS) {
-                // data_loader.show_fragments();
+                data_loader.show_unallocated_fragments();
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
@@ -349,7 +344,7 @@ int main(int argc, char *argv[]) {
                 // insert; delete; select;
                 if(query[query.size()-1] == ';') {
                     // process the query statements
-                    solve_single_query(query, data_loader.relations);
+                    solve_single_query(query);
                     // initial variables
                     query = "";
                     std::cout << system+"> ";
@@ -367,7 +362,7 @@ int main(int argc, char *argv[]) {
                 query += str;
                 if(str[str.size()-1] == ';') {
                     // process the query statements
-                    solve_single_query(query, data_loader.relations);
+                    solve_single_query(query);
                     // initial variables
                     query = "";
                 }

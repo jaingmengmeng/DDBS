@@ -457,9 +457,14 @@ void DataLoader::add_relation(std::string rname, std::vector<Attribute> attribut
     }
 }
 
-void DataLoader::add_temp_fragment(Fragment f) {
-    this->temp_fragments.push_back(f);
-    std::cout << "Add fragment " << f.fname << " successfully. It will work after allocating.\n" << std::endl;
+void DataLoader::add_unallocated_fragment(Fragment f) {
+    std::unordered_map<std::string, Fragment>::const_iterator pos = this->unallocated_fragments.find(f.fname);
+    if(pos == this->unallocated_fragments.end()) {
+        this->unallocated_fragments.insert(std::pair<std::string, Fragment>(f.fname, f));
+        std::cout << "Add fragment " << f.fname << " successfully. It will be allocated after running `allocate [fragment_name] to [site_name]`.\n" << std::endl;
+    } else {
+        std::cout << "There exists a fragment named " << f.fname << ".\n" << std::endl;
+    }
 }
 
 void DataLoader::add_fragment(Fragment f) {
@@ -501,6 +506,7 @@ void DataLoader::add_fragment(Fragment f) {
             }
             if(write_map_to_etcd(m) == 0) {
                 this->relations[i].add_fragment(f);
+                this->unallocated_fragments.erase(f.fname);
                 std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " successfully.\n" << std::endl;
             } else {
                 std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " failed.\n" << std::endl;
@@ -511,14 +517,25 @@ void DataLoader::add_fragment(Fragment f) {
 }
 
 void DataLoader::allocate(std::string fname, std::string sname) {
-    for(auto f : this->temp_fragments) {
-        if(f.fname == fname) {
-            f.set_sname(sname);
-            this->add_fragment(f);
-            return;
+    bool exist_site = false;
+    for(auto s : this->sites) {
+        if(s.sname == sname) {
+            exist_site = true;
+            break;
         }
     }
-    std::cout << "There is no fragment named " << fname << ".\n" << std::endl;
+    if(!exist_site) {
+        std::cout << "There is no site named " << sname << ". Enter `show sites;` for the information of all sites;\n" << std::endl;
+        return;
+    }
+    std::unordered_map<std::string, Fragment>::iterator pos = this->unallocated_fragments.find(fname);
+    if(pos == this->unallocated_fragments.end()) {
+        std::cout << "There is no unallocated fragment named " << fname << ".\n" << std::endl;
+        return;
+    } else {
+        pos->second.set_sname(sname);
+        this->add_fragment(pos->second);
+    }
 }
 
 std::string DataLoader::get_prefix_by_rname(std::string rname) {
@@ -531,4 +548,11 @@ std::string DataLoader::get_prefix_by_rname(std::string rname) {
             return prefix;
     }
     return "";
+}
+
+void DataLoader::show_unallocated_fragments() {
+    for(std::unordered_map<std::string, Fragment>::iterator iter = this->unallocated_fragments.begin(); iter != this->unallocated_fragments.end(); iter++) {
+        std::cout << iter->second << std::endl;
+    }
+    std::cout << std::endl;
 }
