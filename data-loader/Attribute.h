@@ -18,6 +18,7 @@ public:
     bool is_key;
     int type; //1:Integer 2:String
     int value_type;
+    //0:Unknown distribution
     //1:ID:no duplicate e.g.1-100
     //2:U:Uniform Distribution e.g.U[1 100]
     //3:PN:Positive Gaussian Distribution e.g.X~N(3,2)and X>0

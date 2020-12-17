@@ -8,12 +8,12 @@ rname(lower_string(rname)), attributes(attributes), is_horizontal(is_horizontal)
 
 std::ostream& operator<<(std::ostream& os, Relation r) {
     os << r.rname << std::string("(");
-    // for(int i=0; i<r.attributes.size(); ++i) {
-    //     if(i > 0)
-    //         os << std::string(", ");
-    //     os << r.attributes[i];
-    // }
-    os << combine_vector_string(r.get_attrs_meta());
+    for(int i=0; i<r.attributes.size(); ++i) {
+        if(i > 0)
+            os << std::string(", ");
+        os << r.attributes[i];
+    }
+    // os << combine_vector_string(r.get_attrs_meta());
     os << std::string(") ");
     if(r.num_of_recs > 0) {
         os << r.num_of_recs;

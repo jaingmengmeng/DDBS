@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 // extern inline，这里必须设置为内联
 inline void split_string(const std::string& s, std::vector<std::string>& v, const std::string& c) {
@@ -55,6 +56,13 @@ inline std::string trim(std::string s) {
         s.erase(s.find_last_not_of(" ") + 1);
     }
     return s;
+}
+
+inline std::string double2string(double num) {
+    std::ostringstream myos;
+    myos << num;
+    std::string result = myos.str();
+    return result;
 }
 
 #endif

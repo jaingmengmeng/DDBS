@@ -22,7 +22,7 @@ private:
     hsql::SQLParserResult result;
     hsql::SQLStatement* stat;
     
-    void solve_expr(hsql::Expr* expr);  // solve the expr recursively
+    void solve_expr(hsql::Expr* expr, std::vector<Predicate>& where);  // solve the expr recursively
     std::string get_aname_from_expr(hsql::Expr* expr);
     std::vector<std::string> get_anames(std::string rname);
     bool exist_relation(std::string rname);

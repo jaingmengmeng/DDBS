@@ -44,7 +44,7 @@ std::ostream& operator<<(std::ostream& os, SelectStatement s) {
     if(s.where.size() > 0) {
         os << "where_list: ";
         for(int i=0; i<s.where.size(); ++i) {
-            if(i > 0) os << std::string(" AND ");
+            if(i > 0) os << " AND ";
             os << s.where[i];
         }
         os << "\n";

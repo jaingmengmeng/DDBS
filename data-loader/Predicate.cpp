@@ -9,13 +9,6 @@ op_type(op_type), aname(lower_string(aname)), str(str) {}
 Predicate::Predicate(int op_type, std::vector<std::string> join) :
 op_type(op_type), join(join) {}
 
-std::string double2string(double num) {
-    std::ostringstream myos;
-    myos << num;
-    std::string result = myos.str();
-    return result;
-}
-
 std::ostream& operator<<(std::ostream& os, Predicate p) {
     switch (p.op_type) {
         case 1:
