@@ -455,3 +455,29 @@ std::map<std::string, std::string> get_request_statistics(const std::vector<std:
     }
     return mp;
 }
+
+std::string execute_non_query_sql(const std::string& ip, const std::string& sql){
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_http_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+
+    if (channel.Init((ip + ":8000").c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return "Fail to initialize channel";
+    }
+
+    brpc::Controller cntl;
+    ExecuteNonQuerySQLRequest request;
+    ExecuteNonQuerySQLResponse response;
+    request.set_sql(sql);
+    DDBService_Stub stub(&channel);
+    stub.ExecuteNonQuerySQL(&cntl, &request, &response, nullptr);
+    if (cntl.Failed()) {
+        LOG(WARNING) << "Some site was down, " << cntl.ErrorText();
+        return cntl.ErrorText();
+    }
+
+    return response.result();
+}

@@ -29,12 +29,22 @@ message DeleteTempTableResponse{
     optional string result = 1;
 }
 
+message ExecuteNonQuerySQLRequest{
+    optional string sql = 1;
+}
+
+message ExecuteNonQuerySQLResponse{
+    optional string result = 1;
+}
+
 service DDBService{
     rpc RequestTable(TableRequest) returns (TableResponse);
 
     rpc LoadTable(LoadTableRequest) returns (LoadTableResponse);
 
     rpc DeleteTable(DeleteTempTableRequest) returns (DeleteTempTableResponse);
+
+    rpc ExecuteNonQuerySQL(ExecuteNonQuerySQLRequest) returns (ExecuteNonQuerySQLResponse);
 }
 
 // message QueryResponse{
