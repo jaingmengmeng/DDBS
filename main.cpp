@@ -60,7 +60,6 @@ void solve_single_query(std::string query) {
                 std::cout << iter->first << " " << iter->second << std::endl;
             }
             
-            // [TODO]
             write_map_to_etcd(select_tree);
             std::set<std::string> temp_tables;
             for(auto iter : select_tree){
@@ -96,15 +95,26 @@ void solve_single_query(std::string query) {
 
             // delete query tree in etcd
             delete_from_etcd_by_prefix(root_temp_table);
-            
         }
         // insert
         else if(processor.sql_type == 2) {
-            InsertStatement select_stat = processor.insert;
+            InsertStatement insert_stat = processor.insert;
+            // [TODO] 
+            std::unordered_map<std::string, std::string> insert_map = data_loader.get_site_to_insert(insert_stat.rname, insert_stat.values);
+            std::unordered_map<std::string, std::string>::const_iterator iter;
+            for(iter = insert_map.begin(); iter != insert_map.end(); iter++) {
+                std::cout << iter->first << " " << iter->second << std::endl;
+            }
         }
         // delete
         else if(processor.sql_type == 3) {
-            DeleteStatement select_stat = processor.delete_s;
+            DeleteStatement delete_stat = processor.delete_s;
+            // [TODO]
+            std::unordered_map<std::string, std::vector<Predicate>> delete_map = data_loader.get_site_to_delete(delete_stat.rname, delete_stat.where);
+            std::unordered_map<std::string, std::vector<Predicate>>::const_iterator iter;
+            for(iter = delete_map.begin(); iter != delete_map.end(); iter++) {
+                std::cout << iter->first << std::endl;
+            }
         }
     }
 }
@@ -275,6 +285,7 @@ int main(int argc, char *argv[]) {
                                 hf_condition.push_back(Predicate(op_type, aname, std::stod(value)));
                             }
                         }
+                        // [TODO] to vertify the fragment statement is valid --- the fragment is complete & nonexistent.
                         data_loader.add_unallocated_fragment(Fragment(rname, fname, is_horizontal, hf_condition));
                     }
                 } else {

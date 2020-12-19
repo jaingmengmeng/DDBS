@@ -37,3 +37,26 @@ std::ostream& operator<<(std::ostream& os, Predicate p) {
         }
     return os;
 }
+
+bool Predicate::test(std::string value) {
+    switch(this->op_type) {
+        case 1:
+            return std::stod(value) >= this->num;
+        case 2:
+            return std::stod(value) <= this->num;
+        case 3:
+            return std::stod(value) > this->num;
+        case 4:
+            return std::stod(value) > this->num;
+        case 5:
+            return std::stod(value) == this->num;
+        case 6:
+            return value == this->str;
+        case 8:
+            return std::stod(value) != this->num;
+        case 9:
+            return value != this->str;
+        default:
+            break;
+    }
+}

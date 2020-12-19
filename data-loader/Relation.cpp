@@ -106,3 +106,49 @@ bool Relation::in_site(std::string sname) {
     }
     return false;
 }
+
+std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::string values) {
+    if(this->is_horizontal) {
+        std::unordered_map<std::string, std::string> res;
+        std::vector<std::string> v_value;
+        split_string(values, v_value, ",");
+        for(auto f : this->frags) {
+            int count = 0;
+            for(auto p : f.hf_condition) {
+                for(int i=0; i<this->attributes.size(); ++i) {
+                    if(p.aname == this->rname+"_"+this->attributes[i].aname) {
+                        if(p.test(trim(v_value[i]))) {
+                            count++;
+                        }
+                        break;
+                    }
+                }
+            }
+            if(count == f.hf_condition.size()) {
+                res.insert(std::pair<std::string, std::string>(f.sname, values));
+                break;
+            }
+        }
+        return res;
+    } else {
+        std::unordered_map<std::string, std::string> res;
+        std::vector<std::string> v_value;
+        split_string(values, v_value, ",");
+        for(auto f : this->frags) {
+            std::string temp_value = "";
+            for(auto aname : f.vf_condition) {
+                for(int i=0; i<this->attributes.size(); ++i) {
+                    if(trim(aname) == this->attributes[i].aname) {
+                        if(temp_value != "") temp_value += ",";
+                        temp_value += v_value[i];
+                    }
+                }
+            }
+            std::cout << temp_value << "#" << std::endl;
+            res.insert(std::pair<std::string, std::string> (f.sname, temp_value));
+        }
+        return res;
+    }
+}
+
+

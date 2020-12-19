@@ -460,6 +460,16 @@ void DataLoader::add_relation(std::string rname, std::vector<Attribute> attribut
 void DataLoader::add_unallocated_fragment(Fragment f) {
     std::unordered_map<std::string, Fragment>::const_iterator pos = this->unallocated_fragments.find(f.fname);
     if(pos == this->unallocated_fragments.end()) {
+        if(!f.is_horizontal) {
+            std::string prefix = this->get_prefix_by_rname(f.rname);
+            write_kv_to_etcd(prefix+"is_horizontal", "false");
+            for(auto& relation : this->relations) {
+                if(relation.rname == f.rname) {
+                    relation.is_horizontal = false;
+                    break;
+                }
+            }
+        }
         this->unallocated_fragments.insert(std::pair<std::string, Fragment>(f.fname, f));
         std::cout << "Add fragment " << f.fname << " successfully. It will be allocated after running `allocate [fragment_name] to [site_name]`.\n" << std::endl;
     } else {
@@ -507,9 +517,9 @@ void DataLoader::add_fragment(Fragment f) {
             if(write_map_to_etcd(m) == 0) {
                 this->relations[i].add_fragment(f);
                 this->unallocated_fragments.erase(f.fname);
-                std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " successfully.\n" << std::endl;
+                std::cout << "Allocate fragment " << f.fname << " to " << f.sname << " successfully.\n" << std::endl;
             } else {
-                std::cout << "Allocate fragment " << f.fname << " to" << f.sname << " failed.\n" << std::endl;
+                std::cout << "Allocate fragment " << f.fname << " to " << f.sname << " failed.\n" << std::endl;
             }
             return;
         } 
@@ -555,4 +565,12 @@ void DataLoader::show_unallocated_fragments() {
         std::cout << iter->second << std::endl;
     }
     std::cout << std::endl;
+}
+
+std::unordered_map<std::string, std::string> DataLoader::get_site_to_insert(std::string rname, std::string values) {
+    return this->get_relation(rname).get_site_to_insert(values);
+}
+
+std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname, std::vector<Predicate> where) {
+    // return this->get_relation(rname).get_site_to_delete(where);
 }

@@ -20,6 +20,7 @@ public:
     Predicate(int op_type, std::string aname, double num);
     Predicate(int op_type, std::string aname, std::string str);
     Predicate(int op_type, std::vector<std::string> join);
+    bool test(std::string value);
 };
 
 #endif

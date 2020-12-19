@@ -134,8 +134,7 @@ query(q), relations(relations) {
 
                 // get rname
                 if(this->insert_stat->tableName) {
-                    std::string rname = this->insert_stat->tableName;
-                    if(this->exist_relation(rname)) {
+                    if(this->exist_relation(this->insert_stat->tableName)) {
                         this->insert.rname = this->insert_stat->tableName;
                     } else {
                         this->is_valid = false;
@@ -144,18 +143,20 @@ query(q), relations(relations) {
 
                 // get values
                 if(this->is_valid && this->insert_stat->values) {
-                    // [TODO] verify the insert statement is valid.
+                    int index = 0;
+                    Relation r = this->get_relation_by_rname(this->insert_stat->tableName);
                     for (const hsql::Expr* expr : *this->insert_stat->values) {
+                        int attr_type = r.attributes[index].type;
                         // float type
-                        if(expr->type == hsql::kExprLiteralFloat) {
+                        if(expr->type == hsql::kExprLiteralFloat && attr_type == 1) {
                             this->insert.add_value(expr->fval);
                         }
                         // string type
-                        else if(expr->type == hsql::kExprLiteralString) {
+                        else if(expr->type == hsql::kExprLiteralString && attr_type == 2) {
                             this->insert.add_value(expr->name);
                         }
                         // int type
-                        else if(expr->type == hsql::kExprLiteralInt) {
+                        else if(expr->type == hsql::kExprLiteralInt && attr_type == 1) {
                             this->insert.add_value(int(expr->ival));
                         }
                         // other type
@@ -163,6 +164,7 @@ query(q), relations(relations) {
                             std::cout << "Now the system only supports data type of int, float and string." << std::endl;
                             this->is_valid = false;
                         }
+                        index++;
                     }
                 }
 
@@ -396,4 +398,12 @@ bool SQLProcessor::exist_attribute(std::string rname, std::string aname) {
     }
     std::cout << "[ERROR] Unknown Column '" + aname + "' in Table '" + rname + "'." << std::endl;
     return false;
+}
+
+Relation SQLProcessor::get_relation_by_rname(std::string rname) {
+    for(auto relation : this->relations) {
+        if(relation.rname == rname) {
+            return relation;
+        }
+    }
 }

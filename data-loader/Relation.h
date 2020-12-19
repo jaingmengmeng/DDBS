@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <unordered_map>
 
 #include "Fragment.h"
 #include "Attribute.h"
@@ -35,6 +36,8 @@ public:
     std::vector<std::string> get_attrs_meta();  // get global table attributes(meta data)
     std::vector<std::string> get_fragmented_attrs_meta(std::string sname);  // get fragmented table attributes
     bool in_site(std::string sname);  // Determine whether the relation table is assigned to the current site
+    std::unordered_map<std::string, std::string> get_site_to_insert(std::string values);
+    std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete(std::vector<Predicate> where);
 };
 
 #endif

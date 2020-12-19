@@ -37,6 +37,7 @@ public:
     bool is_valid;    // 判断sql中的表名、属性名是否有效
 
     SQLProcessor(std::string q, std::vector<Relation> relations);
+    Relation get_relation_by_rname(std::string rname);
 };
 
 #endif
