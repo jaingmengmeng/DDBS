@@ -17,3 +17,4 @@ std::map<std::string, std::string> read_map_from_etcd(const std::vector<std::str
 int load_table(const std::string& host, const std::string& table_name, const std::string& attr_meta, const std::vector<std::string>& attr_values);
 std::vector<std::string> request_table(const std::string& temp_table_name);
 std::map<std::string, std::string> get_request_statistics(const std::vector<std::string>& temp_table_names);
+std::string execute_non_query_sql(const std::string& ip, const std::string& sql);

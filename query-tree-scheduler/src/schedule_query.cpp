@@ -485,6 +485,9 @@ public:
 
     void DeleteTable(::google::protobuf::RpcController *controller, const ::DeleteTempTableRequest *request,
                      ::DeleteTempTableResponse *response, ::google::protobuf::Closure *done) override;
+
+    void ExecuteNonQuerySQL(::google::protobuf::RpcController *controller, const ::ExecuteNonQuerySQLRequest *request,
+                            ::ExecuteNonQuerySQLResponse *response, ::google::protobuf::Closure *done) override;
 };
 
 
@@ -749,6 +752,16 @@ void DDBServiceImpl::DeleteTable(::google::protobuf::RpcController *controller, 
     auto *cntl = dynamic_cast<brpc::Controller *>(controller);
     std::string temp_table_name = request->temp_table_name();
     std::string sql = "drop table if exists `" + temp_table_name + "`;";
+    execute_non_query_sql(sql);
+    response->set_result("succeed!");
+}
+
+void DDBServiceImpl::ExecuteNonQuerySQL(::google::protobuf::RpcController *controller,
+                                        const ::ExecuteNonQuerySQLRequest *request,
+                                        ::ExecuteNonQuerySQLResponse *response, ::google::protobuf::Closure *done) {
+    brpc::ClosureGuard done_guard(done);
+    auto *cntl = dynamic_cast<brpc::Controller *>(controller);
+    const std::string& sql = request->sql();
     execute_non_query_sql(sql);
     response->set_result("succeed!");
 }

@@ -13,7 +13,7 @@ add_subdirectory(query-tree-scheduler)
 add_subdirectory(network-utils)
 
 # network-utils
-set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../third-party)
+set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/query-tree-scheduler)
 find_library(NETWORK_LIB NAMES network-utils)
 
 add_executable(main main.cpp)
