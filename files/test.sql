@@ -1,0 +1,14 @@
+init;
+show sites;
+define site s1 127.0.0.1:8000, s2 127.0.0.1:9000;
+show sites;
+show tables;
+create table book (id int key, title char(20), author char(20));
+show tables;
+show fragments;
+fragment book vertically into (id, title), (id, author);
+show fragments;
+allocate book.1 to s1;
+allocate book.2 to s2;
+insert into book values (1, 'hello world', 'Mike');
+quit;

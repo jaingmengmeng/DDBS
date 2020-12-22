@@ -572,5 +572,13 @@ std::unordered_map<std::string, std::string> DataLoader::get_site_to_insert(std:
 }
 
 std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname, std::vector<Predicate> where) {
-    // return this->get_relation(rname).get_site_to_delete(where);
+    return this->get_relation(rname).get_site_to_delete(where);
+}
+
+Site DataLoader::get_site_by_sname(const std::string& sname) {
+    for(auto site : this->sites) {
+        if(site.sname == sname) {
+            return site;
+        }
+    }
 }

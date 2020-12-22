@@ -55,6 +55,8 @@ public:
 
     std::unordered_map<std::string, std::string> get_site_to_insert(std::string rname, std::string values);
     std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete(std::string rname, std::vector<Predicate> where);
+
+    Site get_site_by_sname(const std::string& sname);
 };
 
 #endif

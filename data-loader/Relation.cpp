@@ -151,4 +151,22 @@ std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::s
     }
 }
 
-
+std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_delete(std::vector<Predicate> where) {
+    if(this->is_horizontal) {
+        std::unordered_map<std::string, std::vector<Predicate>> res;
+        for(auto f : this->frags) {
+            int count = 0;
+            for(auto w : where) {
+                for(auto p : f.hf_condition) {
+                    if(p.test(w)) {
+                        count++;
+                    }
+                }
+            }
+            if(count == where.size()) {
+                res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
+            }
+        }
+    } else {
+    }
+}

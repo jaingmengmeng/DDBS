@@ -21,6 +21,8 @@ public:
     Predicate(int op_type, std::string aname, std::string str);
     Predicate(int op_type, std::vector<std::string> join);
     bool test(std::string value);
+    bool test(Predicate p);
+    std::string to_string() const;
 };
 
 #endif
