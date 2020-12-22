@@ -116,7 +116,7 @@ std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::s
             int count = 0;
             for(auto p : f.hf_condition) {
                 for(int i=0; i<this->attributes.size(); ++i) {
-                    if(p.aname == this->rname+"_"+this->attributes[i].aname) {
+                    if(p.aname == this->attributes[i].aname) {
                         if(p.test(trim(v_value[i]))) {
                             count++;
                         }
@@ -144,7 +144,7 @@ std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::s
                     }
                 }
             }
-            std::cout << temp_value << "#" << std::endl;
+            // std::cout << temp_value << "#" << std::endl;
             res.insert(std::pair<std::string, std::string> (f.sname, temp_value));
         }
         return res;
@@ -167,6 +167,9 @@ std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_de
                 res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
             }
         }
+        return res;
     } else {
+        std::unordered_map<std::string, std::vector<Predicate>> res;
+        return res;
     }
 }

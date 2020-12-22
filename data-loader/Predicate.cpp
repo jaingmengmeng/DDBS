@@ -122,7 +122,7 @@ bool Predicate::test(Predicate p) {
                 break;
         }
     }
-    return false;
+    return true;
 }
 
 std::string Predicate::to_string() const {

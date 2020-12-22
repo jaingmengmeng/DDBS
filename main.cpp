@@ -73,7 +73,6 @@ void solve_single_query(std::string query) {
         // select
         if(processor.sql_type == 1) {
             SelectStatement select_stat = processor.select;
-            std::cout << select_stat << std::endl;
             std::map<std::string, std::string> select_tree;
             std::string prefix = get_prefix(auto_increment_id++);
             get_query_tree(select_tree, data_loader.relations, select_stat, prefix); //get result in select_tree
@@ -121,12 +120,11 @@ void solve_single_query(std::string query) {
         // insert
         else if(processor.sql_type == 2) {
             InsertStatement insert_stat = processor.insert;
-            std::cout << insert_stat << std::endl;
             // [TODO] 
             std::unordered_map<std::string, std::string> insert_map = data_loader.get_site_to_insert(insert_stat.rname, insert_stat.values);
             std::unordered_map<std::string, std::string>::const_iterator iter;
             for(iter = insert_map.begin(); iter != insert_map.end(); iter++) {
-                std::cout << iter->first << " " << iter->second << std::endl;
+                // std::cout << iter->first << " " << iter->second << std::endl;
                 std::string result = execute_insert_sql(iter->first, insert_stat.rname, iter->second);
                 std::cout << result << std::endl;
             }
@@ -134,12 +132,11 @@ void solve_single_query(std::string query) {
         // delete
         else if(processor.sql_type == 3) {
             DeleteStatement delete_stat = processor.delete_s;
-            std::cout << delete_stat << std::endl;
             // [TODO]
             std::unordered_map<std::string, std::vector<Predicate>> delete_map = data_loader.get_site_to_delete(delete_stat.rname, delete_stat.where);
             std::unordered_map<std::string, std::vector<Predicate>>::const_iterator iter;
             for(iter = delete_map.begin(); iter != delete_map.end(); iter++) {
-                std::cout << iter->first << std::endl;
+                // std::cout << iter->first << std::endl;
                 std::string result = execute_delete_sql(iter->first, delete_stat.rname, iter->second);
                 std::cout << result << std::endl;
             }
@@ -155,7 +152,7 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_show_sites("^show\\s+sites\\s*;?$", boost::regex::icase);
     boost::regex re_help("^h(elp)?\\s*;?$", boost::regex::icase);
     boost::regex re_define_site("^define\\s+site\\s+[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+(\\s*,\\s*[A-Za-z0-9]+\\s+[0-9.]+:[0-9]+)*\\s*;?$", boost::regex::icase);
-    boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
+    boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
     boost::regex re_fragment("^fragment\\s+[A-Za-z0-9]+\\s+(horizontally|vertically)\\s+into\\s+[^;]+\\s*;?$", boost::regex::icase);
     boost::regex re_allocate("^allocate\\s+[A-Za-z0-9\\.]+\\s+to\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
@@ -255,20 +252,20 @@ int main(int argc, char *argv[]) {
                 std::vector<Attribute> attributes;
                 std::vector<std::string> v_attributes;
                 std::string attributes_str = query.substr(query.find_first_of("(")+1, query.find_last_of(")")-query.find_first_of("(")-1);
-                std::cout << attributes_str << std::endl;
+                // std::cout << attributes_str << std::endl;
                 split_string(attributes_str, v_attributes, ",");
                 for(auto attribute : v_attributes) {
                     attribute = trim(attribute);
-                    std::cout << attribute << std::endl;
+                    // std::cout << attribute << std::endl;
                     std::vector<std::string> v_str;
                     split_string(attribute, v_str, " ");
                     for(auto& str : v_str) {
                         str = trim(str);
-                        std::cout << "#" << str << "#" << std::endl;
+                        // std::cout << "#" << str << "#" << std::endl;
                     }
                     bool is_key = v_str.size() == 3 && v_str[2] == "key";
                     int type = (v_str[1] == "int") ? 1 : 2;
-                    std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
+                    // std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
                     attributes.push_back(Attribute(v_str[0], is_key, type));
                 }
                 // add relation
@@ -297,7 +294,7 @@ int main(int argc, char *argv[]) {
                             std::string aname = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$1"));
                             std::string op = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$2"));
                             std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
-                            std::cout << aname << " " << op << " " << value << "#" << std::endl;
+                            // std::cout << aname << " " << op << " " << value << "#" << std::endl;
                             int op_type;
                             if(value[0] == '\'' || value[0] == '"') {
                                 if(op == "=") op_type = 6;
@@ -345,7 +342,7 @@ int main(int argc, char *argv[]) {
                 boost::regex tmp_allocate("(allocate\\s+)([A-Za-z0-9\\.]+)(\\s+to\\s+)([A-Za-z0-9]+)(\\s*;?)");
                 std::string fname = trim(boost::regex_replace(query, tmp_allocate, "$2"));
                 std::string sname = trim(boost::regex_replace(query, tmp_allocate, "$4"));
-                std::cout << fname << " " << sname << "#" << std::endl;
+                // std::cout << fname << " " << sname << "#" << std::endl;
                 // allocate the fragment to the site
                 data_loader.allocate(fname, sname);
                 // initial variables
@@ -434,20 +431,20 @@ int main(int argc, char *argv[]) {
                     std::vector<Attribute> attributes;
                     std::vector<std::string> v_attributes;
                     std::string attributes_str = query.substr(query.find_first_of("(")+1, query.find_last_of(")")-query.find_first_of("(")-1);
-                    std::cout << attributes_str << std::endl;
+                    // std::cout << attributes_str << std::endl;
                     split_string(attributes_str, v_attributes, ",");
                     for(auto attribute : v_attributes) {
                         attribute = trim(attribute);
-                        std::cout << attribute << std::endl;
+                        // std::cout << attribute << std::endl;
                         std::vector<std::string> v_str;
                         split_string(attribute, v_str, " ");
                         for(auto& str : v_str) {
                             str = trim(str);
-                            std::cout << "#" << str << "#" << std::endl;
+                            // std::cout << "#" << str << "#" << std::endl;
                         }
                         bool is_key = v_str.size() == 3 && v_str[2] == "key";
                         int type = (v_str[1] == "int") ? 1 : 2;
-                        std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
+                        // std::cout << v_str[0] << " " << is_key << " " << type << "#" << std::endl;
                         attributes.push_back(Attribute(v_str[0], is_key, type));
                     }
                     // add relation
@@ -476,7 +473,7 @@ int main(int argc, char *argv[]) {
                                 std::string aname = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$1"));
                                 std::string op = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$2"));
                                 std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
-                                std::cout << aname << " " << op << " " << value << "#" << std::endl;
+                                // std::cout << aname << " " << op << " " << value << "#" << std::endl;
                                 int op_type;
                                 if(value[0] == '\'' || value[0] == '"') {
                                     if(op == "=") op_type = 6;
@@ -524,7 +521,7 @@ int main(int argc, char *argv[]) {
                     boost::regex tmp_allocate("(allocate\\s+)([A-Za-z0-9\\.]+)(\\s+to\\s+)([A-Za-z0-9]+)(\\s*;?)");
                     std::string fname = trim(boost::regex_replace(query, tmp_allocate, "$2"));
                     std::string sname = trim(boost::regex_replace(query, tmp_allocate, "$4"));
-                    std::cout << fname << " " << sname << "#" << std::endl;
+                    // std::cout << fname << " " << sname << "#" << std::endl;
                     // allocate the fragment to the site
                     data_loader.allocate(fname, sname);
                     // initial variables

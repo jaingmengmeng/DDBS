@@ -391,7 +391,7 @@ void DataLoader::get_relations() {
                 std::vector<Predicate> hf_condition;
                 int num_of_hfc = std::stoi(relation_info[prefix+"num_of_hfc"]);
                 for(int k=0; k<num_of_hfc; ++k) {
-                    prefix = this->key_map["relations"] + this->sep + std::to_string(i) + this->sep + "fragments" + this->sep + std::to_string(j) + this->sep + "hf_condition" + this->sep + std::to_string(k);
+                    prefix = this->key_map["relations"] + this->sep + std::to_string(i) + this->sep + "fragments" + this->sep + std::to_string(j) + this->sep + "hf_condition" + this->sep + std::to_string(k) + this->sep;
                     int op_type = std::stoi(relation_info[prefix+"op_type"]);
                     std::string aname = relation_info[prefix+"aname"];
                     if(op_type == 6 || op_type == 9) {
@@ -499,12 +499,12 @@ void DataLoader::add_fragment(Fragment f) {
                 for(int j=0; j<num_of_hfc; ++j) {
                     prefix = prefix+"hf_condition"+this->sep+std::to_string(j)+this->sep;
                     int op_type = f.hf_condition[j].op_type;
-                    m[prefix+"op_type"] = op_type;
+                    m[prefix+"op_type"] = std::to_string(op_type);
                     m[prefix+"aname"] = f.hf_condition[j].aname;
                     if(op_type == 6 || op_type == 9) {
                         m[prefix+"str"] = f.hf_condition[j].str;
                     } else {
-                        m[prefix+"num"] = std::to_string(f.hf_condition[j].num);
+                        m[prefix+"num"] = double2string(f.hf_condition[j].num);
                     }
                 }
             } else {

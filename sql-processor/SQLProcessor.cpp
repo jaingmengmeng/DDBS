@@ -199,6 +199,11 @@ query(q), relations(relations) {
                     }
                 }
 
+                // delete rname prefix
+                for(auto& p : this->delete_s.where) {
+                    p.aname = p.aname.substr(p.aname.find_first_of("_")+1) ;
+                }
+
                 // print delete statement
                 if(this->is_valid) {
                     std::cout << this->delete_s << std::endl;
