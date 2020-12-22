@@ -294,7 +294,7 @@ int main(int argc, char *argv[]) {
                             std::string aname = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$1"));
                             std::string op = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$2"));
                             std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
-                            // std::cout << aname << " " << op << " " << value << "#" << std::endl;
+                            // std::cout << aname << " " << op << " " << value << std::endl;
                             int op_type;
                             if(value[0] == '\'' || value[0] == '"') {
                                 if(op == "=") op_type = 6;
@@ -473,7 +473,7 @@ int main(int argc, char *argv[]) {
                                 std::string aname = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$1"));
                                 std::string op = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$2"));
                                 std::string value = trim(boost::regex_replace(v_predicate[j], tmp_predicate, "$3"));
-                                // std::cout << aname << " " << op << " " << value << "#" << std::endl;
+                                // std::cout << aname << " " << op << " " << value << std::endl;
                                 int op_type;
                                 if(value[0] == '\'' || value[0] == '"') {
                                     if(op == "=") op_type = 6;

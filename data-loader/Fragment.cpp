@@ -17,7 +17,7 @@ rname(lower_string(rname)), fname(lower_string(fname)), is_horizontal(is_horizon
 }
 
 std::ostream& operator<<(std::ostream& os, Fragment f) {
-    os << f.fname << std::string("\t") << f.sname << std::string("\t") << f.num_of_recs << std::string("\t");
+    os << f.fname << std::string("\t") << f.sname << std::string("\t");
     if(f.is_horizontal) {
         for(int i=0; i<f.hf_condition.size(); ++i) {
             if(i > 0)

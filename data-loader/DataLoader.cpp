@@ -497,14 +497,14 @@ void DataLoader::add_fragment(Fragment f) {
                 int num_of_hfc = f.hf_condition.size();
                 m[prefix+"num_of_hfc"] = std::to_string(num_of_hfc);
                 for(int j=0; j<num_of_hfc; ++j) {
-                    prefix = prefix+"hf_condition"+this->sep+std::to_string(j)+this->sep;
+                    std::string tmp_prefix = prefix+"hf_condition"+this->sep+std::to_string(j)+this->sep;
                     int op_type = f.hf_condition[j].op_type;
-                    m[prefix+"op_type"] = std::to_string(op_type);
-                    m[prefix+"aname"] = f.hf_condition[j].aname;
+                    m[tmp_prefix+"op_type"] = std::to_string(op_type);
+                    m[tmp_prefix+"aname"] = f.hf_condition[j].aname;
                     if(op_type == 6 || op_type == 9) {
-                        m[prefix+"str"] = f.hf_condition[j].str;
+                        m[tmp_prefix+"str"] = f.hf_condition[j].str;
                     } else {
-                        m[prefix+"num"] = double2string(f.hf_condition[j].num);
+                        m[tmp_prefix+"num"] = double2string(f.hf_condition[j].num);
                     }
                 }
             } else {
