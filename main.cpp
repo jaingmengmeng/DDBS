@@ -43,11 +43,14 @@ std::string execute_insert_sql(const std::string& sname, const std::string& rnam
 std::string execute_delete_sql(const std::string& sname, const std::string& rname, const std::vector<Predicate>& where) {
     Site s = data_loader.get_site_by_sname(sname);
     std::string ip = s.get_url();
-    std::string delete_sql = "DELETE FROM " + rname + " WHERE ";
-    for(int i=0; i<where.size(); ++i) {
-        if(i > 0)
-            delete_sql += " AND ";
-        delete_sql += where[i].to_string();
+    std::string delete_sql = "DELETE FROM " + rname;
+    if(where.size() != 0) {
+        delete_sql += " WHERE ";
+        for(int i=0; i<where.size(); ++i) {
+            if(i > 0)
+                delete_sql += " AND ";
+            delete_sql += where[i].to_string();
+        }
     }
     std::cout << ip << " " << delete_sql << std::endl;
     return execute_non_query_sql(ip, delete_sql);

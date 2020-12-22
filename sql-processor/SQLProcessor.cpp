@@ -135,7 +135,7 @@ query(q), relations(relations) {
                 // get rname
                 if(this->insert_stat->tableName) {
                     if(this->exist_relation(this->insert_stat->tableName)) {
-                        this->insert.rname = this->insert_stat->tableName;
+                        this->insert.rname = lower_string(this->insert_stat->tableName);
                     } else {
                         this->is_valid = false;
                     }
@@ -144,7 +144,7 @@ query(q), relations(relations) {
                 // get values
                 if(this->is_valid && this->insert_stat->values) {
                     int index = 0;
-                    Relation r = this->get_relation_by_rname(this->insert_stat->tableName);
+                    Relation r = this->get_relation_by_rname(lower_string(this->insert_stat->tableName));
                     for (const hsql::Expr* expr : *this->insert_stat->values) {
                         int attr_type = r.attributes[index].type;
                         // float type
@@ -182,7 +182,7 @@ query(q), relations(relations) {
                 
                 // get rname
                 if(this->delete_stat->tableName) {
-                    std::string rname = this->delete_stat->tableName;
+                    std::string rname = lower_string(this->delete_stat->tableName);
                     if(this->exist_relation(rname)) {
                         this->delete_s.rname = rname;
                     } else {
@@ -383,7 +383,7 @@ std::vector<std::string> SQLProcessor::get_anames(std::string rname) {
 
 bool SQLProcessor::exist_relation(std::string rname) {
     for(auto relation : this->relations) {
-        if(relation.rname == rname) {
+        if(relation.rname == lower_string(rname)) {
             return true;
         }
     }
@@ -393,9 +393,9 @@ bool SQLProcessor::exist_relation(std::string rname) {
 
 bool SQLProcessor::exist_attribute(std::string rname, std::string aname) {
     for(auto relation : this->relations) {
-        if(relation.rname == rname) {
+        if(relation.rname == lower_string(rname)) {
             for(auto attribute : relation.attributes) {
-                if(attribute.aname == aname) {
+                if(attribute.aname == lower_string(aname)) {
                     return true;
                 }
             }
