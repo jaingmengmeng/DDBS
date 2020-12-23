@@ -31,6 +31,7 @@ enum INPUT_TYPE {
     ALLOCATE,
     SQL_STATE,
     LOAD_DATA,
+    SET_DISTRIBUTION,
 };
 
 std::string execute_insert_sql(const std::string& sname, const std::string& rname, const std::string& values) {
@@ -191,7 +192,8 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
     boost::regex re_fragment("^fragment\\s+[A-Za-z0-9]+\\s+(horizontally|vertically)\\s+into\\s+[^;]+\\s*;?$", boost::regex::icase);
     boost::regex re_allocate("^allocate\\s+[A-Za-z0-9\\.]+\\s+to\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
-    boost::regex re_load("^load\\s+data\\s+local\\s+infile\\s+'[A-Za-z0-9_/\\.]+'\\s+into\\s+table\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
+    boost::regex re_load("^load\\s+data\\s+local\\s+infile\\s+(('[A-Za-z0-9_/\\.]+')|(\"[A-Za-z0-9_/\\.]+\"))\\s+into\\s+table\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
+    boost::regex re_set_distribution("^set\\s+distribution\\s*;?$", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
         return QUIT;
     } else if(boost::regex_match(input, re_init)) {
@@ -214,6 +216,8 @@ INPUT_TYPE input_classifier(std::string input) {
         return ALLOCATE;
     } else if(boost::regex_match(input, re_load)) {
         return LOAD_DATA;
+    } else if(boost::regex_match(input, re_set_distribution)) {
+        return SET_DISTRIBUTION;
     } else {
         return SQL_STATE;
     }
@@ -410,6 +414,8 @@ int main(int argc, char *argv[]) {
                 // initial variables
                 query = "";
                 std::cout << system+"> ";
+            } else if(input_type == SET_DISTRIBUTION) {
+
             } else if(input_type == INIT) {
                 data_loader.init();
                 // initial variables

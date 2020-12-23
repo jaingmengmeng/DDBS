@@ -17,25 +17,25 @@ class DataLoader {
 private:
     std::string sep = "/";
     std::map<std::string, std::string> key_map;
-
-    std::string get_prefix_by_rname(std::string rname);
 public:
     std::vector<Relation> relations;
     std::vector<Site> sites;
     std::unordered_map<std::string, Fragment> unallocated_fragments;
 
     DataLoader();
+
     void init();    // initial the relations, sites variables.
-    void show_tables(bool show_fragment=true);   // show all tables & fragments information.
 
     void show_sites();
     void get_sites_from_etcd();
     void add_site(std::string sname, std::string ip, std::string port);
     int read_site_num_from_etcd();
 
-    void get_relations_from_etcd();
-    void add_relation(std::string rname, std::vector<Attribute> attributes);
     int read_relation_num_from_etcd();
+    void get_relations_from_etcd();
+    std::string get_prefix_by_rname(std::string rname);
+    void show_tables(bool show_fragment=true);
+    void add_relation(std::string rname, std::vector<Attribute> attributes);
 
     void add_unallocated_fragment(Fragment fragment);
     void allocate(std::string fname, std::string sname);
