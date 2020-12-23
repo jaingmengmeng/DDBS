@@ -37,6 +37,15 @@ message ExecuteNonQuerySQLResponse{
     optional string result = 1;
 }
 
+message ExecuteQuerySQLRequest{
+    optional string sql = 1;
+}
+
+message ExecuteQuerySQLResponse{
+    optional string attr_meta = 1;
+    repeated string attr_values = 2;
+}
+
 service DDBService{
     rpc RequestTable(TableRequest) returns (TableResponse);
 
@@ -45,6 +54,8 @@ service DDBService{
     rpc DeleteTable(DeleteTempTableRequest) returns (DeleteTempTableResponse);
 
     rpc ExecuteNonQuerySQL(ExecuteNonQuerySQLRequest) returns (ExecuteNonQuerySQLResponse);
+
+    rpc ExecuteQuerySQL(ExecuteQuerySQLRequest) returns (ExecuteQuerySQLResponse);
 }
 
 // message QueryResponse{

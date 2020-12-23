@@ -45,7 +45,7 @@ void print_node(std::map<std::string, std::string>& tree_mp, std::string node, s
         node_str += "combine = " + tree_mp[key] + ", ";
     }
     node_str += ")";
-    std::cout << node_str << std::endl;
+    std::cout << node_str << "\n\n";
 }
 
 void print_query_tree(std::map<std::string, std::string>& tree_mp, std::map<string, string> node2site, std::string parent_node, int indent){
@@ -56,15 +56,15 @@ void print_query_tree(std::map<std::string, std::string>& tree_mp, std::map<stri
     std::string type = tree_mp[parent_node + ".type"];
     if (type == "L")
     {
-        if (indent + 2 != 0)
+        if (indent + 4 != 0)
         {
             std::cout << "|"; 
         }
-        for (int i = 0; i < indent + 2; i++)
+        for (int i = 0; i < indent + 4; i++)
         {
             std::cout << "-";
         }
-        std::cout << children << std::endl;
+        std::cout << children << "\n\n";
     }
     else
     {
@@ -78,7 +78,7 @@ void print_query_tree(std::map<std::string, std::string>& tree_mp, std::map<stri
                 temp = children.substr(index1, index2 - index1);
                 int index3 = temp.find(":");
                 std::string node = temp.substr(0, index3);
-                print_query_tree(tree_mp, node2site, node, indent + 2);
+                print_query_tree(tree_mp, node2site, node, indent + 4);
                 index1 = index2 + 1;
             // }
         }   
