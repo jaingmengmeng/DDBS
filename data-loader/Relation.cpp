@@ -181,3 +181,12 @@ std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_de
         }
     }
 }
+
+std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_delete() {
+    std::unordered_map<std::string, std::vector<Predicate>> res;
+    std::vector<Predicate> where;
+    for(auto f : this->frags) {
+        res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
+    }
+    return res;
+}

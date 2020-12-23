@@ -30,11 +30,12 @@ enum INPUT_TYPE {
     FRAGMENT,
     ALLOCATE,
     SQL_STATE,
+    LOAD_DATA,
 };
 
 std::string execute_insert_sql(const std::string& sname, const std::string& rname, const std::string& values) {
     Site s = data_loader.get_site_by_sname(sname);
-    std::string ip = s.get_url();
+    std::string ip = s.ip;
     std::string insert_sql = "INSERT INTO " + rname + " VALUES ("+ values +");";
     std::cout << ip << " " << insert_sql << std::endl;
     return execute_non_query_sql(ip, insert_sql);
@@ -42,7 +43,7 @@ std::string execute_insert_sql(const std::string& sname, const std::string& rnam
 
 std::string execute_delete_sql(const std::string& sname, const std::string& rname, const std::vector<Predicate>& where) {
     Site s = data_loader.get_site_by_sname(sname);
-    std::string ip = s.get_url();
+    std::string ip = s.ip;
     std::string delete_sql = "DELETE FROM " + rname;
     if(where.size() != 0) {
         delete_sql += " WHERE ";
@@ -56,20 +57,28 @@ std::string execute_delete_sql(const std::string& sname, const std::string& rnam
     return execute_non_query_sql(ip, delete_sql);
 }
 
-void solve_multi_query(std::string q) {
-    std::vector<std::string> query_list;
-    split_string(q, query_list, ";");
-    for(int i=0; i<query_list.size(); ++i) {
-        std::string query = query_list[i];
-        // std::cout << "[" << i << "] " << query << std::endl;
-        SQLProcessor processor = SQLProcessor(query, data_loader.relations);
-        if (processor.is_valid) {
-                   
-        }
-    }
+std::string execute_create_sql(const std::string& sname, const std::string& rname) {
+    Site s = data_loader.get_site_by_sname(sname);
+    Relation r = data_loader.get_relation_by_rname(rname);
+    std::string new_rname = sname + "_" + rname;
+    std::string attr_meta = combine_vector_string(r.get_fragmented_attrs_meta(sname));
+    std::string create_sql = "CREATE TABLE " + new_rname + " ("+ attr_meta +");";
+    std::string ip = s.ip;
+    std::cout << ip << " " << create_sql << std::endl;
+    return execute_non_query_sql(ip, create_sql);
 }
 
-void solve_single_query(std::string query) {
+std::string execute_drop_sql(const std::string& sname, const std::string& rname) {
+    Site s = data_loader.get_site_by_sname(sname);
+    Relation r = data_loader.get_relation_by_rname(rname);
+    std::string new_rname = sname + "_" + rname;
+    std::string drop_sql = "DROP TABLE " + new_rname + ";";
+    std::string ip = s.ip;
+    std::cout << ip << " " << drop_sql << std::endl;
+    return execute_non_query_sql(ip, drop_sql);
+}
+
+std::vector<std::string> solve_single_query(std::string query) {
     std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, data_loader.relations);
     if (processor.is_valid) {
@@ -119,9 +128,12 @@ void solve_single_query(std::string query) {
 
             // delete query tree in etcd
             delete_from_etcd_by_prefix(root_temp_table);
+
+            return rows;
         }
         // insert
         else if(processor.sql_type == 2) {
+            std::vector<std::string> res;
             InsertStatement insert_stat = processor.insert;
             // [TODO] 
             std::unordered_map<std::string, std::string> insert_map = data_loader.get_site_to_insert(insert_stat.rname, insert_stat.values);
@@ -131,19 +143,40 @@ void solve_single_query(std::string query) {
                 std::string result = execute_insert_sql(iter->first, insert_stat.rname, iter->second);
                 std::cout << result << std::endl;
             }
+            return res;
         }
         // delete
         else if(processor.sql_type == 3) {
+            std::vector<std::string> res;
             DeleteStatement delete_stat = processor.delete_s;
+            std::unordered_map<std::string, std::vector<Predicate>> delete_map;
+            if(delete_stat.where.size() > 0) {
+                std::string select_sql = "SELECT * FROM " + delete_stat.rname;
+                select_sql += " WHERE ";
+                for(int i=0; i<delete_stat.where.size(); ++i) {
+                    if(i>0) {
+                        select_sql += " AND ";
+                    }
+                    select_sql += delete_stat.where[i].to_string();
+                }
+                std::cout << select_sql << std::endl;
+                std::vector<std::string> delete_rows = solve_single_query(select_sql);
+                delete_map = data_loader.get_site_to_delete(delete_stat.rname, delete_stat.where);
+            } else {
+                delete_map = data_loader.get_site_to_delete(delete_stat.rname);
+            }
             // [TODO]
-            std::unordered_map<std::string, std::vector<Predicate>> delete_map = data_loader.get_site_to_delete(delete_stat.rname, delete_stat.where);
             std::unordered_map<std::string, std::vector<Predicate>>::const_iterator iter;
             for(iter = delete_map.begin(); iter != delete_map.end(); iter++) {
                 // std::cout << iter->first << std::endl;
                 std::string result = execute_delete_sql(iter->first, delete_stat.rname, iter->second);
                 std::cout << result << std::endl;
             }
+            return res;
         }
+    } else {
+        std::vector<std::string> res;
+        return res;
     }
 }
 
@@ -158,6 +191,7 @@ INPUT_TYPE input_classifier(std::string input) {
     boost::regex re_create_table("^create\\s+table\\s+[A-Za-z0-9]+\\s*\\(\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?(\\s*,\\s*[A-Za-z_]+\\s+(int|char\\s*\\(\\s*[0-9]+\\s*\\))(\\s+key)?\\s*)*\\s*\\)\\s*;?$", boost::regex::icase);
     boost::regex re_fragment("^fragment\\s+[A-Za-z0-9]+\\s+(horizontally|vertically)\\s+into\\s+[^;]+\\s*;?$", boost::regex::icase);
     boost::regex re_allocate("^allocate\\s+[A-Za-z0-9\\.]+\\s+to\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
+    boost::regex re_load("^load\\s+data\\s+local\\s+infile\\s+'[A-Za-z0-9_/\\.]+'\\s+into\\s+table\\s+[A-Za-z0-9]+\\s*;?$", boost::regex::icase);
     if(boost::regex_match(input, re_quit)) {
         return QUIT;
     } else if(boost::regex_match(input, re_init)) {
@@ -178,6 +212,8 @@ INPUT_TYPE input_classifier(std::string input) {
         return FRAGMENT;
     } else if(boost::regex_match(input, re_allocate)) {
         return ALLOCATE;
+    } else if(boost::regex_match(input, re_load)) {
+        return LOAD_DATA;
     } else {
         return SQL_STATE;
     }
@@ -348,6 +384,29 @@ int main(int argc, char *argv[]) {
                 // std::cout << fname << " " << sname << "#" << std::endl;
                 // allocate the fragment to the site
                 data_loader.allocate(fname, sname);
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
+            } else if(input_type == LOAD_DATA) {
+                query = lower_string(query);
+                // get file_path & rname
+                boost::regex tmp_load("(load\\s+data\\s+local\\s+infile\\s+')([A-Za-z0-9_/\\.]+)('\\s+into\\s+table\\s+)([A-Za-z0-9]+)(\\s*;?)");
+                std::string file_path = trim(boost::regex_replace(query, tmp_load, "$2"));
+                std::string rname = trim(boost::regex_replace(query, tmp_load, "$4"));
+                Relation r = data_loader.get_relation_by_rname(rname);
+                std::vector<std::vector<std::string>> new_data = data_loader.get_data_from_tsv(file_path);
+                std::map<std::string, std::vector<std::vector<std::string>>> fragment_data_map = data_loader.fragment_data(rname, new_data);
+                std::map<std::string, std::vector<std::vector<std::string>>>::iterator iter;
+                for(iter = fragment_data_map.begin(); iter != fragment_data_map.end(); iter++) {
+                    std::string sname = iter->first;
+                    Site s = data_loader.get_site_by_sname(sname);
+                    std::string url = s.get_url();
+                    std::string attr_meta = combine_vector_string(r.get_fragmented_attrs_meta(sname));
+                    std::vector<std::vector<std::string>> new_data = iter->second;
+                    std::vector<std::string> insert_values = data_loader.get_insert_values(rname, new_data);
+                    int res = load_table(url, sname+std::string("_")+rname, attr_meta, insert_values);
+                    std::cout << res << std::endl;
+                }
                 // initial variables
                 query = "";
                 std::cout << system+"> ";

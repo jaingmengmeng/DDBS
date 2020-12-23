@@ -4,11 +4,11 @@ DataLoader::DataLoader() {
     this->key_map.insert(std::pair<std::string, std::string>("ddbs", "ddbs"));
     this->key_map.insert(std::pair<std::string, std::string>("site_num", "ddbs" + this->sep + "nums_of_sites"));
     this->key_map.insert(std::pair<std::string, std::string>("sites", "ddbs" + this->sep + "sites"));
-
     this->key_map.insert(std::pair<std::string, std::string>("relation_num", "ddbs" + this->sep + "nums_of_relations"));
     this->key_map.insert(std::pair<std::string, std::string>("relations", "ddbs" + this->sep + "relations"));
-    this->get_sites();
-    this->get_relations();
+    
+    this->get_sites_from_etcd();
+    this->get_relations_from_etcd();
 }
 
 void DataLoader::init() {
@@ -31,10 +31,11 @@ void DataLoader::show_tables(bool show_fragment) {
     std::cout << std::endl;
 }
 
-std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fragment(Relation relation) {
-    std::map<std::string, std::vector<std::vector<std::string>>> allocated_data_map;
+std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::fragment_data(std::string rname, std::vector<std::vector<std::string>> datas) {
+    std::map<std::string, std::vector<std::vector<std::string>>> fragment_data_map;
+    Relation relation = this->get_relation_by_rname(rname);
     if(relation.is_horizontal) {
-        for(auto data : this->datas[relation.rname]) {
+        for(auto data : datas) {
             for(auto fragment : relation.frags) {
                 std::vector<bool> result;
                 for(auto predicate : fragment.hf_condition) {
@@ -80,12 +81,12 @@ std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fr
                     }
                 }
                 if(result.size() == fragment.hf_condition.size()) {
-                    allocated_data_map[fragment.sname].push_back(data);
+                    fragment_data_map[fragment.sname].push_back(data);
                 }
             }
         }
     } else {
-        for(auto data : this->datas[relation.rname]) {
+        for(auto data : datas) {
             for(auto fragment : relation.frags) {
                 std::vector<std::string> tmp;
                 for(auto aname : fragment.vf_condition) {
@@ -95,189 +96,55 @@ std::map<std::string, std::vector<std::vector<std::string>>> DataLoader::data_fr
                         }
                     }
                 }
-                allocated_data_map[fragment.sname].push_back(tmp);
+                fragment_data_map[fragment.sname].push_back(tmp);
             }
         }
     }
-    for(auto& fragment : relation.frags) {
-        fragment.set_num_of_recs(allocated_data_map[fragment.sname].size());
-    }
-    return allocated_data_map;
+    return fragment_data_map;
 }
 
-void DataLoader::load_data() {
+std::vector<std::vector<std::string>> DataLoader::get_data_from_tsv(std::string file_path) {
     std::string file_error = std::string("Error opening file. Please check your filename.");
-    for(auto relation : this->relations) {
-        std::string file_path = this->files[relation.rname];
-        std::ifstream fin(file_path, std::ios_base::in);
-        std::string str;
-        if (fin.is_open()) {
-            while(std::getline(fin, str)) {
-                // 根据制表符分割字符串
-                std::vector<std::string> v_str;
-                split_string(str, v_str, std::string("\t"));
-                this->datas[relation.rname].push_back(v_str);
-            }
-            relation.set_num_of_recs(this->datas[relation.rname].size());
-            // 根据分片信息将所有数据分到不同的site上
-            this->fragmented_datas[relation.rname] = this->data_fragment(relation);
-        } else {
-            std::cout << file_error << std::endl;
-            exit(1);
-        }
-    }
-}
-
-std::vector<std::string> DataLoader::import_fragmented_data(std::string sname, std::string rname) {
-    std::vector<std::string> res;
-    std::vector<std::vector<std::string>> data = this->fragmented_datas[rname][sname];
-    Relation r = this->get_relation(rname);
-    if(data.size() == 0) return res;
-    for(int i=0; i<data.size(); ++i) {
-        std::string values = "";
-        for(int j=0; j<data[i].size(); ++j) {
-            if(j > 0) {
-                values += std::string(", ");
-            }
-            if(r.attributes[j].type == 1) {
-                values += data[i][j];
-            } else if(r.attributes[j].type == 2) {
-                values += std::string("'");
-                values += data[i][j];
-                values += std::string("'");
-            }
-        }
-        res.push_back(values);
-    }
-    return res;
-}
-
-std::vector<std::string> DataLoader::import_data(std::string rname) {
-    std::vector<std::string> res;
-    std::vector<std::vector<std::string>> data = this->datas[rname];
-    Relation r = this->get_relation(rname);
-    if(data.size() == 0) return res;
-    for(int i=0; i<data.size(); ++i) {
-        std::string values = "";
-        for(int j=0; j<data[i].size(); ++j) {
-            if(j > 0) {
-                values += std::string(", ");
-            }
-            if(r.attributes[j].type == 1) {
-                values += data[i][j];
-            } else if(r.attributes[j].type == 2) {
-                values += std::string("'");
-                values += data[i][j];
-                values += std::string("'");
-            }
-        }
-        res.push_back(values);
-    }
-    return res;
-}
-
-std::string DataLoader::import_fragmented_data_sql(std::string sname, std::string rname, std::string file_path) {
-    std::string res = std::string("");
-    std::vector<std::vector<std::string>> data = this->fragmented_datas[rname][sname];
-    Relation r = this->get_relation(rname);
-    if(data.size() == 0) return res;
-    res += std::string("INSERT INTO ");
-    res += r.rname;
-    res += std::string("(");
-    if(r.is_horizontal) {
-        for(int i=0; i<r.attributes.size(); ++i) {
-            if(i > 0) {
-                res += std::string(", ");
-            }
-            res += r.attributes[i].aname;
+    std::ifstream fin(file_path, std::ios_base::in);
+    std::string str;
+    std::vector<std::vector<std::string>> res;
+    if (fin.is_open()) {
+        while(std::getline(fin, str)) {
+            // split string with "\t"
+            std::vector<std::string> v_str;
+            split_string(str, v_str, std::string("\t"));
+            res.push_back(v_str);
         }
     } else {
-        for(auto fragment : r.frags) {
-            if(fragment.sname == sname) {
-                for(int i=0; i<fragment.vf_condition.size(); ++i) {
-                    if(i > 0) {
-                        res += std::string(", ");
-                    }
-                    res += fragment.vf_condition[i];
-                }
-            }
-        }
-    }
-    res += std::string(") VALUES ");
-    for(int i=0; i<data.size(); ++i) {
-        if(i > 0) {
-            res += std::string(", ");
-        }
-        res += std::string("(");
-        for(int j=0; j<data[i].size(); ++j) {
-            if(j > 0) {
-                res += std::string(", ");
-            }
-            if(r.attributes[j].type == 1) {
-                res += data[i][j];
-            } else if(r.attributes[j].type == 2) {
-                res += std::string("'");
-                res += data[i][j];
-                res += std::string("'");
-            }
-        }
-        res += std::string(")");
-    }
-    res += std::string(";");
-    if(file_path != "") {
-        // 如果没有文件则创建文件; 如果有则清空文件.
-        std::ofstream fout(file_path, std::ios::ate | std::ios::out);
-        fout << res << std::endl;
-        fout.close();
+        std::cout << file_error << std::endl;
     }
     return res;
 }
 
-std::string DataLoader::import_data_sql(std::string rname, std::string file_path) {
-    std::string res = std::string("");
-    std::vector<std::vector<std::string>> data = this->datas[rname];
-    Relation r = this->get_relation(rname);
+std::vector<std::string> DataLoader::get_insert_values(std::string rname, std::vector<std::vector<std::string>> data) {
+    std::vector<std::string> res;
+    Relation r = this->get_relation_by_rname(rname);
     if(data.size() == 0) return res;
-    res += std::string("INSERT INTO ");
-    res += r.rname;
-    res += std::string("(");
-    for(int i=0; i<r.attributes.size(); ++i) {
-        if(i > 0) {
-            res += std::string(", ");
-        }
-        res += r.attributes[i].aname;
-    }
-    res += std::string(") VALUES ");
     for(int i=0; i<data.size(); ++i) {
-        if(i > 0) {
-            res += std::string(", ");
-        }
-        res += std::string("(");
+        std::string values = "";
         for(int j=0; j<data[i].size(); ++j) {
             if(j > 0) {
-                res += std::string(", ");
+                values += std::string(", ");
             }
             if(r.attributes[j].type == 1) {
-                res += data[i][j];
+                values += data[i][j];
             } else if(r.attributes[j].type == 2) {
-                res += std::string("'");
-                res += data[i][j];
-                res += std::string("'");
+                values += std::string("'");
+                values += data[i][j];
+                values += std::string("'");
             }
         }
-        res += std::string(")");
-    }
-    res += std::string(";");
-    if(file_path != "") {
-        // 如果没有文件则创建文件; 如果有则清空文件.
-        std::ofstream fout(file_path, std::ios::ate | std::ios::out);
-        fout << res << std::endl;
-        fout.close();
+        res.push_back(values);
     }
     return res;
 }
 
-Relation DataLoader::get_relation(std::string rname) {
+Relation DataLoader::get_relation_by_rname(std::string rname) {
     for(auto relation : this->relations) {
         if(relation.rname == rname) {
             return relation;
@@ -292,7 +159,7 @@ void DataLoader::show_sites() {
     std::cout << std::endl;
 }
 
-void DataLoader::get_sites() {
+void DataLoader::get_sites_from_etcd() {
     int site_num = this->read_site_num_from_etcd();
     std::unordered_map<std::string, std::string> site_info = read_from_etcd_by_prefix(this->key_map["sites"]);
     for(int i=0; i<site_num; ++i) {
@@ -335,7 +202,7 @@ int DataLoader::read_site_num_from_etcd() {
     }
 }
 
-void DataLoader::get_relations() {
+void DataLoader::get_relations_from_etcd() {
     int relation_num = this->read_relation_num_from_etcd();
     std::unordered_map<std::string, std::string> relation_info = read_from_etcd_by_prefix(this->key_map["relations"]);
     for(int i=0; i<relation_num; ++i) {
@@ -568,11 +435,15 @@ void DataLoader::show_unallocated_fragments() {
 }
 
 std::unordered_map<std::string, std::string> DataLoader::get_site_to_insert(std::string rname, std::string values) {
-    return this->get_relation(rname).get_site_to_insert(values);
+    return this->get_relation_by_rname(rname).get_site_to_insert(values);
 }
 
 std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname, std::vector<Predicate> where) {
-    return this->get_relation(rname).get_site_to_delete(where);
+    return this->get_relation_by_rname(rname).get_site_to_delete(where);
+}
+
+std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname) {
+    return this->get_relation_by_rname(rname).get_site_to_delete();
 }
 
 Site DataLoader::get_site_by_sname(const std::string& sname) {
