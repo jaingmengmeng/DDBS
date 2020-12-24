@@ -79,6 +79,74 @@ std::string execute_drop_sql(const std::string& sname, const std::string& rname)
     return execute_non_query_sql(ip, drop_sql);
 }
 
+void print_node(std::map<std::string, std::string>& tree_mp, std::string node, std::string site, int indent){
+    if (indent != 0)
+    {
+        std::cout << "|"; 
+    }
+    for (int i = 0; i < indent; i++)
+    {
+        std::cout << "-";
+    }
+
+    std::string node_str = node + "(";
+    node_str += site + ", ";
+    std::string key = node + ".project";
+    if (tree_mp.find(key) != tree_mp.end())
+    {
+        node_str += "project = " + tree_mp[key] + ", ";
+    }
+    key = node + ".select";
+    if (tree_mp.find(key) != tree_mp.end())
+    {
+        node_str += "select = " + tree_mp[key] + ", ";
+    }
+    key = node + ".combine";
+    if (tree_mp.find(key) != tree_mp.end())
+    {
+        node_str += "combine = " + tree_mp[key] + ", ";
+    }
+    node_str += ")";
+    std::cout << node_str << "\n\n";
+}
+
+void print_query_tree(std::map<std::string, std::string>& tree_mp, std::map<string, string> node2site, std::string parent_node, int indent){
+
+    print_node(tree_mp, parent_node, node2site[parent_node], indent);
+  
+    std::string children = tree_mp[parent_node + ".children"];
+    std::string type = tree_mp[parent_node + ".type"];
+    if (type == "L")
+    {
+        if (indent + 4 != 0)
+        {
+            std::cout << "|"; 
+        }
+        for (int i = 0; i < indent + 4; i++)
+        {
+            std::cout << "-";
+        }
+        std::cout << children << "\n\n";
+    }
+    else
+    {
+        std::string temp;
+        int index1 = 0, index2 = 0;
+        while (index2 != std::string::npos)
+        {
+            index2 = children.find("|", index1);
+            // if (index2 != std::string::npos)
+            // {
+                temp = children.substr(index1, index2 - index1);
+                int index3 = temp.find(":");
+                std::string node = temp.substr(0, index3);
+                print_query_tree(tree_mp, node2site, node, indent + 4);
+                index1 = index2 + 1;
+            // }
+        }   
+    }
+}
+
 std::vector<std::string> solve_single_query(std::string query) {
     std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, data_loader.relations);
@@ -88,11 +156,12 @@ std::vector<std::string> solve_single_query(std::string query) {
             SelectStatement select_stat = processor.select;
             std::map<std::string, std::string> select_tree;
             std::string prefix = get_prefix(auto_increment_id++);
-            get_query_tree(select_tree, data_loader.relations, select_stat, prefix); //get result in select_tree
+            std::map<std::string, std::string> node2site;
+            get_query_tree(select_tree, node2site, data_loader.relations, select_stat, prefix); //get result in select_tree
             std::map<std::string, std::string>::reverse_iterator iter;
-            for(iter = select_tree.rbegin(); iter != select_tree.rend(); iter++){
-                std::cout << iter->first << " " << iter->second << std::endl;
-            }
+            // for(iter = select_tree.rbegin(); iter != select_tree.rend(); iter++){
+            //     std::cout << iter->first << " " << iter->second << std::endl;
+            // }
             
             write_map_to_etcd(select_tree);
             std::set<std::string> temp_tables;
@@ -100,11 +169,16 @@ std::vector<std::string> solve_single_query(std::string query) {
                 temp_tables.insert(iter.first.substr(0, iter.first.find('.')));
             }
             std::string root_temp_table = *(temp_tables.cbegin());
-            std::cout << "root: " << root_temp_table << std::endl;
+            node2site[root_temp_table] = "site" + std::to_string(get_site_no());
+            // std::cout << "root: " << root_temp_table << std::endl;
+            print_query_tree(select_tree, node2site, root_temp_table, 0);
+
+            // [TODO]
+            write_map_to_etcd(select_tree);
             std::vector<std::string> rows = request_table(root_temp_table);
-            for(const std::string& row : rows){
-                std::cout << row << std::endl;
-            }
+            // for(const std::string& row : rows){
+            //     std::cout << row << std::endl;
+            // }
             std::cout << "total: " << rows.size() << " rows" << std::endl;
             std::vector<std::string> v(temp_tables.cbegin(), temp_tables.cend());
             try
@@ -222,6 +296,7 @@ INPUT_TYPE input_classifier(std::string input) {
         return SQL_STATE;
     }
 }
+
 
 int main(int argc, char *argv[]) {
     // [TODO] start statement

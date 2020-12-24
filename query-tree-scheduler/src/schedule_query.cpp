@@ -22,6 +22,7 @@
 #include <string>
 #include <unordered_map>
 #include <map>
+#include <regex>
 
 #include <typeinfo>
 
@@ -106,6 +107,60 @@ bool execute_non_query_sql(const std::string &sql) {
 
 }
 
+int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response){
+    sql::mysql::MySQL_Driver *driver;
+    sql::Connection *conn;
+    sql::Statement *stat;
+    sql::ResultSet *rs;
+
+    driver = sql::mysql::get_driver_instance();
+    conn = driver->connect("127.0.0.1", "root", "123456");
+    stat = conn->createStatement();
+
+    LOG(INFO) << "execute sql: " << sql;
+    try {
+        stat->execute("create database if not exists `" + DB_NAME + "`;");
+        stat->execute("use `" + DB_NAME + "`;");
+        rs = stat->executeQuery(sql);
+        LOG(INFO) << "query result row count: " << rs->rowsCount();
+        sql::ResultSetMetaData *rsm = rs->getMetaData();
+        int count = rsm->getColumnCount();
+        if (count > 0) {
+//            std::map<std::string, std::string> columns;
+            std::vector<std::string> column_names;
+            std::vector<std::string> column_types;
+            std::string attr_meta;
+
+            attr_meta = rsm->getColumnName(1) + " " + rsm->getColumnTypeName(1);
+            column_names.emplace_back(rsm->getColumnName(1));
+            column_types.emplace_back(rsm->getColumnTypeName(1));
+            for (int i = 2; i <= count; i++) {
+                attr_meta += ("," + rsm->getColumnName(i) + " " + rsm->getColumnTypeName(i));
+                column_names.emplace_back(rsm->getColumnName(i));
+                column_types.emplace_back(rsm->getColumnTypeName(i));
+            }
+            
+            response->set_attr_meta(attr_meta);
+            while (rs->next()) {
+                std::string row;
+                for (int i = 0, j = 0; i < column_names.size() && j < column_types.size();  ++i, ++j) {
+                    row += rs->getString(column_names[i]) + ",";
+                }
+                response->add_attr_values(row.substr(0, row.length() - 1));
+            }
+        }
+        rs->close();
+        stat->close();
+        conn->close();
+        return count;
+    } catch (sql::SQLException &exception) {
+        LOG(ERROR) << exception.what();
+        return 0;
+    }
+
+    
+}
+
 int execute_query_sql(const std::string &sql, const std::string &table_name, TableResponse *response,
                       const std::string &temp_table_type) {
     sql::mysql::MySQL_Driver *driver;
@@ -129,6 +184,7 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
 //            std::map<std::string, std::string> columns;
             std::vector<std::string> column_names;
             std::vector<std::string> column_types;
+            
             std::string attr_meta;
             // 1.leaf -- add table_name prefix
             if (temp_table_type == LEAF) {
@@ -167,6 +223,9 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
                 response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
+        rs->close();
+        stat->close();
+        conn->close();
         return count;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
@@ -269,13 +328,23 @@ nlohmann::json read_from_etcd(brpc::Channel *channel, brpc::Controller *cntl, co
     return j;
 }
 
-//std::vector<std::string> s_split(const std::string &in, const std::string &delim) {
-//    std::regex re{delim};
-//    return std::vector<std::string>{
-//            std::sregex_token_iterator(in.begin(), in.end(), re, -1),
-//            std::sregex_token_iterator()
-//    };
-//}
+void trim(std::string &s) 
+{
+    if (s.empty()) 
+    {
+        return ;
+    }
+    s.erase(0,s.find_first_not_of(" "));
+    s.erase(s.find_last_not_of(" ") + 1);
+}
+
+std::vector<std::string> s_split(const std::string &in, const std::string &delim) {
+   std::regex re{delim};
+   return std::vector<std::string>{
+           std::sregex_token_iterator(in.begin(), in.end(), re, -1),
+           std::sregex_token_iterator()
+   };
+}
 
 void split_string(const std::string &s, std::vector<std::string> &v, const std::string &c) {
     std::string::size_type pos1, pos2;
@@ -488,6 +557,11 @@ public:
 
     void ExecuteNonQuerySQL(::google::protobuf::RpcController *controller, const ::ExecuteNonQuerySQLRequest *request,
                             ::ExecuteNonQuerySQLResponse *response, ::google::protobuf::Closure *done) override;
+
+    void ExecuteQuerySQL(::google::protobuf::RpcController* controller,
+                       const ::ExecuteQuerySQLRequest* request,
+                       ::ExecuteQuerySQLResponse* response,
+                       ::google::protobuf::Closure* done) override;                        
 };
 
 
@@ -690,14 +764,37 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                         tb.project_expr = "*";
                     }
                     std::string sql = "select " + tb.project_expr + " from ";
-                    for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
-                        sql += iter->first + ", ";
+                    auto iter = tb.children.cbegin();
+                    sql += iter->first + " join ";
+                    iter++;
+                    sql += iter->first;
+                    // sql += " on " + tb.join_expr;
+                    // for (auto iter = tb.children.cbegin(); iter != tb.children.cend(); iter++) {
+                    //     sql += iter->first + ", ";
+                    // }
+                    // sql = sql.substr(0, sql.length() - 2);
+                    // sql += " where " + tb.join_expr;
+
+                    // std::vector<std::string> ts = s_split(tb.join_expr, "(\s?)=(\s?)");
+
+                    int index = tb.join_expr.find('=');
+                    std::string s1 = tb.join_expr.substr(0, index);
+                    std::string s2 = tb.join_expr.substr(index + 1);
+                    trim(s1);
+                    trim(s2);
+                    std::string attr1 = s1.substr(s1.find('.') + 1);
+                    std::string attr2 = s2.substr(s2.find('.') + 1);
+                    if (attr1 == attr2)
+                    {
+                        sql += " using(" + attr1 + ")";
                     }
-                    sql = sql.substr(0, sql.length() - 2);
-                    sql += " where " + tb.join_expr;
+                    else{
+                        sql += " on " + tb.join_expr;
+                    }
+                    
 
                     if (!tb.select_expr.empty()) {
-                        sql += " and " + tb.select_expr;
+                        sql += " where " + tb.select_expr;
                     }
                     sql += ";";
                     int count = execute_query_sql(sql, first_child_temp_table_name, response, NON_LEAF);
@@ -764,6 +861,14 @@ void DDBServiceImpl::ExecuteNonQuerySQL(::google::protobuf::RpcController *contr
     const std::string& sql = request->sql();
     execute_non_query_sql(sql);
     response->set_result("succeed!");
+}
+
+void DDBServiceImpl::ExecuteQuerySQL(::google::protobuf::RpcController* controller, const ::ExecuteQuerySQLRequest* request,
+                    ::ExecuteQuerySQLResponse* response, ::google::protobuf::Closure* done){
+    brpc::ClosureGuard done_guard(done);
+    auto *cntl = dynamic_cast<brpc::Controller *>(controller);
+    const std::string& sql = request->sql();
+    execute_query_sql(sql, response);
 }
 
 

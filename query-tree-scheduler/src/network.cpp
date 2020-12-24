@@ -481,3 +481,36 @@ std::string execute_non_query_sql(const std::string& ip, const std::string& sql)
 
     return response.result();
 }
+
+
+std::vector<std::string> execute_query_sql(const std::string& ip, const std::string& sql){
+    brpc::Channel channel;
+    brpc::ChannelOptions options;
+    options.protocol = FLAGS_http_protocol;
+    options.timeout_ms = FLAGS_timeout_ms;
+    options.max_retry = FLAGS_max_retry;
+
+    std::vector<std::string> v;
+
+    if (channel.Init((ip + ":8000").c_str(), FLAGS_load_balancer.c_str(), &options) != 0){
+        LOG(ERROR) << "Fail to initialize channel";
+        return v;
+    }
+
+    brpc::Controller cntl;
+    ExecuteQuerySQLRequest request;
+    ExecuteQuerySQLResponse response;
+    request.set_sql(sql);
+    DDBService_Stub stub(&channel);
+    stub.ExecuteQuerySQL(&cntl, &request, &response, nullptr);
+    if (cntl.Failed()) {
+        LOG(WARNING) << "Some site was down, " << cntl.ErrorText();
+        return v;
+    }
+    v.emplace_back(response.attr_meta());
+    for (int i = 0; i < response.attr_values_size(); ++i) {
+        v.emplace_back(response.attr_values(i));
+    }
+
+    return v;
+}

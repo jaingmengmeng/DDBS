@@ -18,3 +18,4 @@ int load_table(const std::string& host, const std::string& table_name, const std
 std::vector<std::string> request_table(const std::string& temp_table_name);
 std::map<std::string, std::string> get_request_statistics(const std::vector<std::string>& temp_table_names);
 std::string execute_non_query_sql(const std::string& ip, const std::string& sql);
+std::vector<std::string> execute_query_sql(const std::string& ip, const std::string& sql);

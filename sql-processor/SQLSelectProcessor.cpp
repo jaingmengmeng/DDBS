@@ -346,7 +346,7 @@ void print_node(TreeNode tn){
     cout<<" "<<endl;
 }
 
-void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_for_etcd,string prefix){
+void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_for_etcd, map<string, string>& node2site, string prefix){
     string key_head = "temp_table"+tn.layer+".";
     if(tn.node_type==1){
         output_for_etcd.insert(pair<string, string>(key_head+"type","L")); //fragment node
@@ -415,18 +415,19 @@ void print_node_format(Tree query_tree,TreeNode tn, map<string,string>& output_f
             string child_ip;
             child_ip = siteno_to_ip.find(query_tree.tn[tn.child[i]].sname)->second;
             chil.append(prefix+"temp_table"+query_tree.tn[tn.child[i]].layer+":"+child_ip+"|");
+            node2site[prefix+"temp_table"+query_tree.tn[tn.child[i]].layer] = query_tree.tn[tn.child[i]].sname;
         }
         chil.erase(chil.end()-1); //erase last "|"
         output_for_etcd.insert(pair<string, string>(key_head+"children",chil));       
     }    
 }
 
-void print_tree_format(Tree query_tree, int root,map<string,string>& output_for_etcd,string prefix){
+void print_tree_format(Tree query_tree, int root,map<string,string>& output_for_etcd, map<string, string>& node2site, string prefix){
     queue<int> tn_queue;
     tn_queue.push(root);
     while(tn_queue.size()>0){
         int current_addr=tn_queue.front();
-        print_node_format(query_tree,query_tree.tn[current_addr],output_for_etcd,prefix);
+        print_node_format(query_tree,query_tree.tn[current_addr],output_for_etcd, node2site, prefix);
         if(query_tree.tn[current_addr].child[0]!=-1){
             for(int i=0;i<query_tree.tn[current_addr].child.size();i++){
                 tn_queue.push(query_tree.tn[current_addr].child[i]);
@@ -497,7 +498,7 @@ void label_layer(Tree& query_tree_return,int root){
     }
 }
 
-void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relations,SelectStatement sql,string prefix){
+void get_query_tree(map<string,string>& output_for_etcd1, map<string, string>& node2site, vector<Relation> relations,SelectStatement sql,string prefix){
     siteno_to_ip.insert(pair<string, string>("site1","10.77.70.172"));
     siteno_to_ip.insert(pair<string, string>("site2","10.77.70.188"));
     siteno_to_ip.insert(pair<string, string>("site3","10.77.70.189"));
@@ -1189,7 +1190,7 @@ void get_query_tree(map<string,string>& output_for_etcd1, vector<Relation> relat
    cout<<"__________________________output format 1 end__________________________"<<endl;
 */
     map<string,string> output_for_etcd;
-    print_tree_format(query_tree_return,root,output_for_etcd,prefix);
+    print_tree_format(query_tree_return,root,output_for_etcd, node2site, prefix);
     for(auto& x:output_for_etcd){
         output_for_etcd1.insert(pair<string, string>(prefix+x.first,x.second)); //fragment node
     }
