@@ -57,11 +57,11 @@ bool Predicate::test(std::string value) {
         case 5:
             return std::stod(value) == this->num;
         case 6:
-            return value == this->str;
+            return value == this->str || value == "'" + this->str + "'";
         case 8:
             return std::stod(value) != this->num;
         case 9:
-            return value != this->str;
+            return value != this->str && value != "'" + this->str + "'";
         default:
             break;
     }
