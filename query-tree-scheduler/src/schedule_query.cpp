@@ -149,6 +149,9 @@ int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response)
                 response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
+        rs->close();
+        stat->close();
+        conn->close();
         return count;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
@@ -220,6 +223,9 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
                 response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
+        rs->close();
+        stat->close();
+        conn->close();
         return count;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
