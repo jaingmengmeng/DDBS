@@ -780,7 +780,7 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     std::string attr2 = s2.substr(s2.find('.') + 1);
                     if (attr1 == attr2)
                     {
-                        sql += "using(" + attr1 + ")";
+                        sql += " using(" + attr1 + ")";
                     }
                     else{
                         sql += " on " + tb.join_expr;
