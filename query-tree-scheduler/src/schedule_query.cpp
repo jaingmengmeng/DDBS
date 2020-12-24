@@ -322,6 +322,16 @@ nlohmann::json read_from_etcd(brpc::Channel *channel, brpc::Controller *cntl, co
     return j;
 }
 
+void trim(std::string &s) 
+{
+    if (s.empty()) 
+    {
+        return ;
+    }
+    s.erase(0,s.find_first_not_of(" "));
+    s.erase(s.find_last_not_of(" ") + 1);
+}
+
 std::vector<std::string> s_split(const std::string &in, const std::string &delim) {
    std::regex re{delim};
    return std::vector<std::string>{
@@ -759,9 +769,15 @@ void DDBServiceImpl::RequestTable(::google::protobuf::RpcController *controller,
                     // sql = sql.substr(0, sql.length() - 2);
                     // sql += " where " + tb.join_expr;
 
-                    std::vector<std::string> ts = s_split(tb.join_expr, "(\s?)=(\s?)");
-                    std::string attr1 = ts[0].substr(ts[0].find('.') + 1);
-                    std::string attr2 = ts[1].substr(ts[1].find('.') + 1);
+                    // std::vector<std::string> ts = s_split(tb.join_expr, "(\s?)=(\s?)");
+
+                    int index = tb.join_expr.find('=');
+                    std::string s1 = tb.join_expr.substr(0, index);
+                    std::string s2 = tb.join_expr.substr(index + 1);
+                    trim(s1);
+                    trim(s2);
+                    std::string attr1 = s1.substr(s1.find('.') + 1);
+                    std::string attr2 = s2.substr(s2.find('.') + 1);
                     if (attr1 == attr2)
                     {
                         sql += "using(" + attr1 + ")";
