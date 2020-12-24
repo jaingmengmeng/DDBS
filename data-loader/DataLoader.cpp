@@ -13,7 +13,7 @@ DataLoader::DataLoader() {
 
 void DataLoader::init() {
     if(delete_from_etcd_by_prefix(this->key_map["ddbs"]) == 0) {
-        this->sites.clear();
+        this->sites.clear(); 
         this->relations.clear();
         std::cout << "Init successfully.\n" << std::endl;
     } else {
@@ -160,6 +160,7 @@ void DataLoader::show_sites() {
 }
 
 void DataLoader::get_sites_from_etcd() {
+    this->sites.clear();
     int site_num = this->read_site_num_from_etcd();
     std::unordered_map<std::string, std::string> site_info = read_from_etcd_by_prefix(this->key_map["sites"]);
     for(int i=0; i<site_num; ++i) {
@@ -203,6 +204,7 @@ int DataLoader::read_site_num_from_etcd() {
 }
 
 void DataLoader::get_relations_from_etcd() {
+    this->relations.clear();
     int relation_num = this->read_relation_num_from_etcd();
     std::unordered_map<std::string, std::string> relation_info = read_from_etcd_by_prefix(this->key_map["relations"]);
     for(int i=0; i<relation_num; ++i) {
