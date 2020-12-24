@@ -64,7 +64,7 @@ enum INPUT_TYPE {
 std::string execute_insert_sql(const std::string& sname, const std::string& rname, const std::string& values) {
     Site s = data_loader.get_site_by_sname(sname);
     std::string ip = s.ip;
-    std::string insert_sql = "INSERT INTO " + rname + " VALUES ("+ values +");";
+    std::string insert_sql = "INSERT INTO " + s.sname+"_"+rname + " VALUES ("+ values +");";
     std::cout << ip << " " << insert_sql << std::endl;
     return execute_non_query_sql(ip, insert_sql);
 }
@@ -72,7 +72,7 @@ std::string execute_insert_sql(const std::string& sname, const std::string& rnam
 std::string execute_delete_sql(const std::string& sname, const std::string& rname, const std::vector<Predicate>& where) {
     Site s = data_loader.get_site_by_sname(sname);
     std::string ip = s.ip;
-    std::string delete_sql = "DELETE FROM " + rname;
+    std::string delete_sql = "DELETE FROM " + s.sname+"_"+rname;
     if(where.size() != 0) {
         delete_sql += " WHERE ";
         for(int i=0; i<where.size(); ++i) {
@@ -552,7 +552,6 @@ int solve(bool show_query=false) {
         for(auto iter=distribution_map.begin(); iter!=distribution_map.end(); iter++) {
             std::string rname = iter->first;
             std::string prefix = data_loader.get_prefix_by_rname(rname);
-            std::cout << prefix << std::endl;
             for(auto iter_2=iter->second.begin(); iter_2!=iter->second.end(); iter_2++) {
                 kv_map[prefix+iter_2->first] = iter_2->second;
             }
@@ -563,6 +562,11 @@ int solve(bool show_query=false) {
         query = "";
         std::cout << ddbs_system << "> ";
     } else if(input_type == INIT) {
+        for(auto r : data_loader.relations) {
+            for(auto f : r.frags) {
+                execute_drop_sql(f.sname, f.rname);
+            }
+        }
         data_loader.init();
         // initial variables
         query = "";

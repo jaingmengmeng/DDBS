@@ -24,6 +24,7 @@ allocate Publisher.2 to site2;
 allocate Publisher.3 to site3;
 allocate Publisher.4 to site4;
 show tables;
+set distribution;
 insert into Customer values(300001, 'Xiaoming', 1);
 insert into Customer values(300002, 'Xiaohong', 1);
 insert into Publisher values(104001, 'High Education Press', 'PRC');
