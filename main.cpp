@@ -415,7 +415,85 @@ int main(int argc, char *argv[]) {
                 query = "";
                 std::cout << system+"> ";
             } else if(input_type == SET_DISTRIBUTION) {
+                std::unordered_map<std::string, std::unordered_map<std::string, std::string>> distribution_map;
+                std::unordered_map<std::string, std::string> book_map;
+                std::unordered_map<std::string, std::string> customer_map;
+                std::unordered_map<std::string, std::string> orders_map;
+                std::unordered_map<std::string, std::string> publisher_map;
+                // book.id
+                book_map["attributes/0/value_type"] = "1";
+                book_map["attributes/0/num_of_values"] = "2";
+                book_map["attributes/0/value/0"] = "200001";
+                book_map["attributes/0/value/1"] = "250000";
+                // book.publisher_id
+                book_map["attributes/3/value_type"] = "1";
+                book_map["attributes/3/num_of_values"] = "2";
+                book_map["attributes/3/value/0"] = "100001";
+                book_map["attributes/3/value/1"] = "105000";
+                // book.copies
+                book_map["attributes/4/value_type"] = "2";
+                book_map["attributes/4/num_of_values"] = "2";
+                book_map["attributes/4/value/0"] = "0";
+                book_map["attributes/4/value/1"] = "10000";
+                // customer.id
+                customer_map["attributes/0/value_type"] = "1";
+                customer_map["attributes/0/num_of_values"] = "2";
+                customer_map["attributes/0/value/0"] = "300001";
+                customer_map["attributes/0/value/1"] = "315000";
+                // customer.rank
+                customer_map["attributes/2/value_type"] = "4";
+                customer_map["attributes/2/num_of_proportion"] = "3";
+                customer_map["attributes/2/proportion/0/key"] = "1";
+                customer_map["attributes/2/proportion/0/value"] = "0.4";
+                customer_map["attributes/2/proportion/1/key"] = "2";
+                customer_map["attributes/2/proportion/1/value"] = "0.3";
+                customer_map["attributes/2/proportion/2/key"] = "3";
+                customer_map["attributes/2/proportion/2/value"] = "0.3";
+                // orders.customer_id
+                orders_map["attributes/0/value_type"] = "1";
+                orders_map["attributes/0/num_of_values"] = "2";
+                orders_map["attributes/0/value/0"] = "300001";
+                orders_map["attributes/0/value/1"] = "315000";
+                // orders.book_id
+                orders_map["attributes/1/value_type"] = "1";
+                orders_map["attributes/1/num_of_values"] = "2";
+                orders_map["attributes/1/value/0"] = "200001";
+                orders_map["attributes/1/value/1"] = "250000";
+                // orders.quantity
+                orders_map["attributes/2/value_type"] = "3";
+                orders_map["attributes/2/num_of_values"] = "2";
+                orders_map["attributes/2/value/0"] = "3";
+                orders_map["attributes/2/value/1"] = "2";
+                // publisher.id
+                publisher_map["attributes/0/value_type"] = "1";
+                publisher_map["attributes/0/num_of_values"] = "2";
+                publisher_map["attributes/0/value/0"] = "100001";
+                publisher_map["attributes/0/value/1"] = "105000";
+                // publisher.nation
+                publisher_map["attributes/1/value_type"] = "4";
+                publisher_map["attributes/1/num_of_proportion"] = "2";
+                publisher_map["attributes/1/proportion/0/key"] = "PRC";
+                publisher_map["attributes/1/proportion/0/value"] = "0.5";
+                publisher_map["attributes/1/proportion/1/key"] = "USA";
+                publisher_map["attributes/1/proportion/1/value"] = "0.5";
 
+                distribution_map["book"] = book_map;
+                distribution_map["customer"] = customer_map;
+                distribution_map["orders"] = orders_map;
+                distribution_map["publisher"] = publisher_map;
+                std::map<std::string, std::string> kv_map;
+                for(auto iter=distribution_map.begin(); iter!=distribution_map.end(); iter++) {
+                    std::string rname = iter->first;
+                    std::string prefix = data_loader.get_prefix_by_rname(rname);
+                    std::cout << prefix << std::endl;
+                    for(auto iter_2=iter->second.begin(); iter_2!=iter->second.end(); iter_2++) {
+                        kv_map[prefix+iter_2->first] = iter_2->second;
+                    }
+                }
+                write_map_to_etcd(kv_map);
+                // initial variables
+                query = "";
+                std::cout << system+"> ";
             } else if(input_type == INIT) {
                 data_loader.init();
                 // initial variables

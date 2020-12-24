@@ -235,7 +235,7 @@ void DataLoader::get_relations_from_etcd() {
                     r.add_attribute(aname, is_key, type, value_type, proportion);
                 } else {
                     std::vector<double> value;
-                    int num_of_value = std::stoi(relation_info[prefix+"value"]);
+                    int num_of_value = std::stoi(relation_info[prefix+"num_of_values"]);
                     for(int k=0; k<num_of_value; ++k) {
                         double tem_value = std::stod(relation_info[this->key_map["relations"] + this->sep + std::to_string(i) + this->sep + "attributes" + this->sep + std::to_string(j) + this->sep + "value" + this->sep + std::to_string(k)]);
                         value.push_back(tem_value);
