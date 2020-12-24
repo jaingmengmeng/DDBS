@@ -537,12 +537,12 @@ int solve(bool show_query=false) {
         publisher_map["attributes/0/value/0"] = "100001";
         publisher_map["attributes/0/value/1"] = "105000";
         // publisher.nation
-        publisher_map["attributes/1/value_type"] = "4";
-        publisher_map["attributes/1/num_of_proportion"] = "2";
-        publisher_map["attributes/1/proportion/0/key"] = "PRC";
-        publisher_map["attributes/1/proportion/0/value"] = "0.5";
-        publisher_map["attributes/1/proportion/1/key"] = "USA";
-        publisher_map["attributes/1/proportion/1/value"] = "0.5";
+        publisher_map["attributes/2/value_type"] = "4";
+        publisher_map["attributes/2/num_of_proportion"] = "2";
+        publisher_map["attributes/2/proportion/0/key"] = "PRC";
+        publisher_map["attributes/2/proportion/0/value"] = "0.5";
+        publisher_map["attributes/2/proportion/1/key"] = "USA";
+        publisher_map["attributes/2/proportion/1/value"] = "0.5";
 
         distribution_map["book"] = book_map;
         distribution_map["customer"] = customer_map;
