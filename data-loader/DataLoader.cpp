@@ -457,3 +457,11 @@ Site DataLoader::get_site_by_sname(const std::string& sname) {
         }
     }
 }
+
+std::map<std::string, std::string> DataLoader::get_sites_map() {
+    std::map<std::string, std::string> site_map;
+    for(auto s : this->sites) {
+        site_map.insert(std::pair<std::string, std::string>(s.sname, s.ip));
+    }
+    return site_map;
+}

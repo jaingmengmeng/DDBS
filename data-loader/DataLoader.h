@@ -50,6 +50,7 @@ public:
     std::vector<std::vector<std::string>> get_data_from_tsv(std::string file_path);
     std::map<std::string, std::vector<std::vector<std::string>>> fragment_data(std::string rname, std::vector<std::vector<std::string>> datas);
     std::vector<std::string> get_insert_values(std::string rname, std::vector<std::vector<std::string>> data);
+    std::map<std::string, std::string> get_sites_map();
 };
 
 #endif

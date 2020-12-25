@@ -188,7 +188,7 @@ void solve_single_query(std::string query) {
             std::map<std::string, std::string> select_tree;
             std::string prefix = get_prefix(auto_increment_id++);
             std::map<std::string, std::string> node2site;
-            get_query_tree(select_tree, node2site, data_loader.relations, select_stat, prefix); //get result in select_tree
+            get_query_tree(select_tree, node2site, data_loader.relations, select_stat, prefix, data_loader.get_sites_map()); //get result in select_tree
             std::map<std::string, std::string>::reverse_iterator iter;
             // for(iter = select_tree.rbegin(); iter != select_tree.rend(); iter++){
             //     std::cout << iter->first << " " << iter->second << std::endl;
