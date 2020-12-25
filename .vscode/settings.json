@@ -83,6 +83,7 @@
         "bit": "cpp",
         "memory_resource": "cpp",
         "optional": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "variant": "cpp"
     }
 }

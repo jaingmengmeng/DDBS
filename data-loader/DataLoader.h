@@ -43,8 +43,7 @@ public:
     void show_unallocated_fragments();
 
     std::unordered_map<std::string, std::string> get_site_to_insert(std::string rname, std::string values);
-    std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete(std::string rname);
-    std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete(std::string rname, std::vector<Predicate> where);
+    std::vector<Site> get_site_to_delete(std::string rname);
 
     Site get_site_by_sname(const std::string& sname);
     Relation get_relation_by_rname(std::string rname);

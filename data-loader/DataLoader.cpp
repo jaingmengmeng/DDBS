@@ -440,12 +440,14 @@ std::unordered_map<std::string, std::string> DataLoader::get_site_to_insert(std:
     return this->get_relation_by_rname(rname).get_site_to_insert(values);
 }
 
-std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname, std::vector<Predicate> where) {
-    return this->get_relation_by_rname(rname).get_site_to_delete(where);
-}
-
-std::unordered_map<std::string, std::vector<Predicate>> DataLoader::get_site_to_delete(std::string rname) {
-    return this->get_relation_by_rname(rname).get_site_to_delete();
+std::vector<Site> DataLoader::get_site_to_delete(std::string rname) {
+    std::vector<Site> res;
+    for(auto s : this->sites) {
+        if(this->get_relation_by_rname(rname).in_site(s.sname)) {
+            res.push_back(s);
+        }
+    }
+    return res;
 }
 
 Site DataLoader::get_site_by_sname(const std::string& sname) {

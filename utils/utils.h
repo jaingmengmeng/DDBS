@@ -65,4 +65,29 @@ inline std::string double2string(double num) {
     return result;
 }
 
+inline std::vector<std::string> get_intersection(std::vector<std::vector<std::string>> set) {
+    std::vector<std::string> res;
+    if(set.size() == 0)
+        return res;
+    else if(set.size() == 1)
+        return set[0];
+    else {
+        for(auto s1 : set[0]) {
+            int count = 0;
+            for(int i=1; i<set.size(); ++i) {
+                for(auto s2 : set[i]) {
+                    if(s1 == s2) {
+                        count++;
+                        break;
+                    }
+                }
+            }
+            if(count+1 == set.size()) {
+                res.push_back(s1);
+            }
+        }
+        return res;
+    }
+}
+
 #endif

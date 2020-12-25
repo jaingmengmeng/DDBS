@@ -37,8 +37,8 @@ public:
     std::vector<std::string> get_fragmented_attrs_meta(std::string sname);  // get fragmented table attributes
     bool in_site(std::string sname);  // Determine whether the relation table is assigned to the current site
     std::unordered_map<std::string, std::string> get_site_to_insert(std::string values);
-    std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete(std::vector<Predicate> where);
-    std::unordered_map<std::string, std::vector<Predicate>> get_site_to_delete();
+    std::string get_key();
+    int get_key_type();
 };
 
 #endif

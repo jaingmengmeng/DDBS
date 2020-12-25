@@ -151,42 +151,18 @@ std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::s
     }
 }
 
-std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_delete(std::vector<Predicate> where) {
-    if(where.size() == 0) {
-        std::unordered_map<std::string, std::vector<Predicate>> res;
-        for(auto f : this->frags) {
-            res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
-        }
-        return res;
-    } else {
-        if(this->is_horizontal) {
-            std::unordered_map<std::string, std::vector<Predicate>> res;
-            for(auto f : this->frags) {
-                int count = 0;
-                for(auto w : where) {
-                    for(auto p : f.hf_condition) {
-                        if(p.test(w)) {
-                            count++;
-                        }
-                    }
-                }
-                if(count == where.size()) {
-                    res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
-                }
-            }
-            return res;
-        } else {
-            std::unordered_map<std::string, std::vector<Predicate>> res;
-            return res;
+std::string Relation::get_key() {
+    for(auto a : this->attributes) {
+        if(a.is_key) {
+            return a.aname;
         }
     }
 }
 
-std::unordered_map<std::string, std::vector<Predicate>> Relation::get_site_to_delete() {
-    std::unordered_map<std::string, std::vector<Predicate>> res;
-    std::vector<Predicate> where;
-    for(auto f : this->frags) {
-        res.insert(std::pair<std::string, std::vector<Predicate>>(f.sname, where));
+int Relation::get_key_type() {
+    for(auto a : this->attributes) {
+        if(a.is_key) {
+            return a.type;
+        }
     }
-    return res;
 }

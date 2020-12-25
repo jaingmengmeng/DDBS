@@ -65,7 +65,7 @@ std::string execute_insert_sql(const std::string& sname, const std::string& rnam
     Site s = data_loader.get_site_by_sname(sname);
     std::string ip = s.ip;
     std::string insert_sql = "INSERT INTO " + s.sname+"_"+rname + " VALUES ("+ values +");";
-    std::cout << ip << " " << insert_sql << std::endl;
+    // std::cout << ip << " " << insert_sql << std::endl;
     return execute_non_query_sql(ip, insert_sql);
 }
 
@@ -81,7 +81,7 @@ std::string execute_delete_sql(const std::string& sname, const std::string& rnam
             delete_sql += where[i].to_string();
         }
     }
-    std::cout << ip << " " << delete_sql << std::endl;
+    // std::cout << ip << " " << delete_sql << std::endl;
     return execute_non_query_sql(ip, delete_sql);
 }
 
@@ -92,7 +92,7 @@ std::string execute_create_sql(const std::string& sname, const std::string& rnam
     std::string attr_meta = combine_vector_string(r.get_fragmented_attrs_meta(sname));
     std::string create_sql = "CREATE TABLE " + new_rname + " ("+ attr_meta +");";
     std::string ip = s.ip;
-    std::cout << ip << " " << create_sql << std::endl;
+    // std::cout << ip << " " << create_sql << std::endl;
     return execute_non_query_sql(ip, create_sql);
 }
 
@@ -100,9 +100,9 @@ std::string execute_drop_sql(const std::string& sname, const std::string& rname)
     Site s = data_loader.get_site_by_sname(sname);
     Relation r = data_loader.get_relation_by_rname(rname);
     std::string new_rname = sname + "_" + rname;
-    std::string drop_sql = "DROP TABLE " + new_rname + ";";
+    std::string drop_sql = "DROP TABLE IF EXISTS " + new_rname + ";";
     std::string ip = s.ip;
-    std::cout << ip << " " << drop_sql << std::endl;
+    // std::cout << ip << " " << drop_sql << std::endl;
     return execute_non_query_sql(ip, drop_sql);
 }
 
@@ -174,13 +174,17 @@ void print_query_tree(std::map<std::string, std::string>& tree_mp, std::map<stri
     }
 }
 
-std::vector<std::string> solve_single_query(std::string query) {
+void solve_single_query(std::string query) {
     std::cout << query << std::endl;
     SQLProcessor processor = SQLProcessor(query, data_loader.relations);
     if (processor.is_valid) {
         // select
         if(processor.sql_type == 1) {
             SelectStatement select_stat = processor.select;
+            if(select_stat.from.size() == 1 && data_loader.get_relation_by_rname(select_stat.from[0]).num_of_recs == 0) {
+                std::cout << "total: 0 rows" << std::endl;
+                return;
+            }
             std::map<std::string, std::string> select_tree;
             std::string prefix = get_prefix(auto_increment_id++);
             std::map<std::string, std::string> node2site;
@@ -230,55 +234,140 @@ std::vector<std::string> solve_single_query(std::string query) {
 
             // delete query tree in etcd
             delete_from_etcd_by_prefix(root_temp_table);
-
-            return rows;
         }
         // insert
         else if(processor.sql_type == 2) {
-            std::vector<std::string> res;
             InsertStatement insert_stat = processor.insert;
-            // [TODO] 
+            // get sites with values to insert.
             std::unordered_map<std::string, std::string> insert_map = data_loader.get_site_to_insert(insert_stat.rname, insert_stat.values);
             std::unordered_map<std::string, std::string>::const_iterator iter;
             for(iter = insert_map.begin(); iter != insert_map.end(); iter++) {
-                // std::cout << iter->first << " " << iter->second << std::endl;
+                std::cout << "(" << iter->second << ")" << " is inserted into " << iter->first << std::endl;
                 std::string result = execute_insert_sql(iter->first, insert_stat.rname, iter->second);
                 std::cout << result << std::endl;
             }
-            return res;
+            // update num_of_recs
+            std::string prefix = data_loader.get_prefix_by_rname(insert_stat.rname);
+            std::string key = prefix + "num_of_recs";
+            int num_of_recs = std::stoi(read_from_etcd_by_key(key));
+            write_kv_to_etcd(key, std::to_string(num_of_recs+1));
+            data_loader.get_relations_from_etcd();
         }
         // delete
         else if(processor.sql_type == 3) {
-            std::vector<std::string> res;
             DeleteStatement delete_stat = processor.delete_s;
-            std::unordered_map<std::string, std::vector<Predicate>> delete_map;
+            std::vector<Site> v_site = data_loader.get_site_to_delete(delete_stat.rname);
+            Relation r = data_loader.get_relation_by_rname(delete_stat.rname);
             if(delete_stat.where.size() > 0) {
-                std::string select_sql = "SELECT * FROM " + delete_stat.rname;
-                select_sql += " WHERE ";
-                for(int i=0; i<delete_stat.where.size(); ++i) {
-                    if(i>0) {
-                        select_sql += " AND ";
+                int count = 0;
+                if(r.is_horizontal) {
+                    for(auto s : v_site) {
+                        // excute select sql to get rows to be deleted.
+                        std::string select_sql = "SELECT * FROM " + s.sname+"_"+delete_stat.rname;
+                        select_sql += " WHERE ";
+                        for(int i=0; i<delete_stat.where.size(); ++i) {
+                            if(i>0) {
+                                select_sql += " AND ";
+                            }
+                            select_sql += delete_stat.where[i].to_string();
+                        }
+                        // std::cout << select_sql << std::endl;
+                        std::vector<std::string> res = execute_query_sql(s.ip, select_sql);
+                        if(res.size() > 1) {
+                            for(int i=1; i<res.size(); ++i) {
+                                std::cout << "(" << res[i] << ") is deleted from " << s.sname << std::endl;
+                                count++;
+                            }
+                        }
+                        // excute delete sql
+                        std::string result = execute_delete_sql(s.sname, delete_stat.rname, delete_stat.where);
+                        if(res.size() > 1) std::cout << result << std::endl;
                     }
-                    select_sql += delete_stat.where[i].to_string();
                 }
-                std::cout << select_sql << std::endl;
-                std::vector<std::string> delete_rows = solve_single_query(select_sql);
-                delete_map = data_loader.get_site_to_delete(delete_stat.rname, delete_stat.where);
-            } else {
-                delete_map = data_loader.get_site_to_delete(delete_stat.rname);
+                // (id, name)  (id, rank) get the id of rows which to delete.
+                else {
+                    std::vector<std::vector<std::string>> v_res;
+                    Relation r = data_loader.get_relation_by_rname(delete_stat.rname);
+                    std::string key = r.get_key();
+                    int key_type = r.get_key_type();
+                    for(auto p : delete_stat.where) {
+                        for(auto f : r.frags) {
+                            for(auto a : f.vf_condition) {
+                                if(a == p.aname) {
+                                    Site s = data_loader.get_site_by_sname(f.sname);
+                                    std::string select_sql = "SELECT * FROM " + s.sname+"_"+delete_stat.rname;
+                                    select_sql += " WHERE ";
+                                    select_sql += p.to_string();
+                                    std::vector<std::string> res = execute_query_sql(s.ip, select_sql);
+                                    // get the key of rows that to be deleted
+                                    std::vector<std::string> res_key;
+                                    std::string attr_meta = res[0];
+                                    std::vector<std::string> v_attr;
+                                    split_string(attr_meta, v_attr, ",");
+                                    int key_index = 0;
+                                    for(int j=0; j<v_attr.size(); ++j) {
+                                        if(v_attr[j].substr(0, key.size()) == key) {
+                                            key_index = j;
+                                            break;
+                                        }
+                                    }
+                                    if(res.size() > 1) {
+                                        for(int j=1; j<res.size(); ++j) {
+                                            std::vector<std::string> v_value;
+                                            split_string(res[j], v_value, ",");
+                                            res_key.push_back(v_value[key_index]);
+                                        }
+                                    }
+                                    v_res.push_back(res_key);
+                                }
+                            }
+                        }
+                    }
+                    // get intersection
+                    std::vector<std::string> v_key = get_intersection(v_res);
+                    count = v_key.size();
+                    for(auto k : v_key) {
+                        if(key_type == 2) {
+                            k = "'" + k + "'";
+                        }
+                        for(auto s : v_site) {
+                            std::string select_sql = "SELECT * FROM " + s.sname+"_"+delete_stat.rname;
+                            select_sql += " WHERE ";
+                            select_sql += (key + "=" + k + ";");
+                            std::vector<std::string> res = execute_query_sql(s.ip, select_sql);
+                            std::cout << "(" << res[1] << ") is deleted from " << s.sname << std::endl;
+                            // excute delete sql
+                            std::string result = execute_delete_sql(s.sname, delete_stat.rname, std::vector<Predicate>{Predicate(6, key, k)});
+                            std::cout << result << std::endl;
+                        }
+                    }
+                }
+                // update num_of_recs
+                std::string prefix = data_loader.get_prefix_by_rname(delete_stat.rname);
+                std::string key = prefix + "num_of_recs";
+                int num_of_recs = std::stoi(read_from_etcd_by_key(key));
+                write_kv_to_etcd(key, std::to_string(num_of_recs-count));
+                data_loader.get_relations_from_etcd();
             }
-            // [TODO]
-            std::unordered_map<std::string, std::vector<Predicate>>::const_iterator iter;
-            for(iter = delete_map.begin(); iter != delete_map.end(); iter++) {
-                // std::cout << iter->first << std::endl;
-                std::string result = execute_delete_sql(iter->first, delete_stat.rname, iter->second);
-                std::cout << result << std::endl;
+            // delete all rows
+            else {
+                // get sites with conditions to delete.
+                for(auto s : v_site) {
+                    std::string delete_sql = "DELETE FROM " + s.sname + "_" + delete_stat.rname;
+                    std::cout << delete_sql << std::endl;
+                    std::string result = execute_non_query_sql(s.ip, delete_sql);
+                    std::cout << result << std::endl;
+                }
+                // update num_of_recs
+                std::string prefix = data_loader.get_prefix_by_rname(delete_stat.rname);
+                std::string key = prefix + "num_of_recs";
+                int num_of_recs = std::stoi(read_from_etcd_by_key(key));
+                write_kv_to_etcd(key, std::to_string(0));
+                data_loader.get_relations_from_etcd();
             }
-            return res;
         }
     } else {
-        std::vector<std::string> res;
-        return res;
+
     }
 }
 
@@ -465,7 +554,9 @@ int solve(bool show_query=false) {
         std::string file_path = trim(boost::regex_replace(query, tmp_load, "$2"));
         std::string rname = trim(boost::regex_replace(query, tmp_load, "$4"));
         Relation r = data_loader.get_relation_by_rname(rname);
+        // read data from file
         std::vector<std::vector<std::string>> new_data = data_loader.get_data_from_tsv(file_path);
+        // fragment data
         std::map<std::string, std::vector<std::vector<std::string>>> fragment_data_map = data_loader.fragment_data(rname, new_data);
         std::map<std::string, std::vector<std::vector<std::string>>>::iterator iter;
         for(iter = fragment_data_map.begin(); iter != fragment_data_map.end(); iter++) {
@@ -475,8 +566,14 @@ int solve(bool show_query=false) {
             std::string attr_meta = combine_vector_string(r.get_fragmented_attrs_meta(sname));
             std::vector<std::vector<std::string>> new_data = iter->second;
             std::vector<std::string> insert_values = data_loader.get_insert_values(rname, new_data);
+            int count = insert_values.size();
             int res = load_table(url, sname+std::string("_")+rname, attr_meta, insert_values);
-            std::cout << res << std::endl;
+            // update num_of_recs
+            std::string prefix = data_loader.get_prefix_by_rname(rname);
+            std::string key = prefix + "num_of_recs";
+            int num_of_recs = std::stoi(read_from_etcd_by_key(key));
+            write_kv_to_etcd(key, std::to_string(num_of_recs+count));
+            data_loader.get_relations_from_etcd();
         }
         // initial variables
         query = "";
