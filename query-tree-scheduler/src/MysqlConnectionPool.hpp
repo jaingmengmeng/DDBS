@@ -3,6 +3,8 @@
 #include <list>
 #include <pthread.h>
 
+#include "butil/logging.h"
+
 #include <mysql_connection.h>
 #include <mysql_driver.h>
 #include <cppconn/driver.h>
@@ -17,7 +19,7 @@
 const std::string DEFAULT_HOST = "127.0.0.1";
 const std::string DEFAULT_USERNAME = "root";
 const std::string DEFAULT_PASSWORD = "123456";
-const int MAXSIZE = 50;
+const int MAXSIZE = 40;
 
 
 class MysqlConnectionPool{
@@ -67,11 +69,11 @@ MysqlConnectionPool::MysqlConnectionPool(std::string url, std::string username, 
         this->m_driver = sql::mysql::get_driver_instance();
     }
     catch(sql::SQLException& e){
-        std::cerr << "cannot get mysql driver" << std::endl;
+        LOG(ERROR) << "cannot get mysql driver";
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        LOG(ERROR) << e.what();
     }
     this->InitConnection(m_maxPoolSize / 2);
 }
@@ -101,7 +103,7 @@ void MysqlConnectionPool::InitConnection(int initialSize){
             ++(this->m_curPoolSize);
         }
         else{
-            std::cerr << "failed to create mysql connection" << std::endl;
+           LOG(ERROR) << "failed to create mysql connection";
         }
     }
     pthread_mutex_unlock(&this->lock);
@@ -115,12 +117,12 @@ sql::Connection* MysqlConnectionPool::CreateConnection(void){
         return conn;
     }
     catch(sql::SQLException& e){
-        std::cerr << "fail to create mysql connection" << std::endl;
+        LOG(ERROR) << "fail to create mysql connection";
         return NULL;
     }
     catch(const std::exception& e)
     {
-        std::cerr << e.what() << '\n';
+        LOG(ERROR) << e.what();
         return NULL;
     }   
 }
@@ -199,11 +201,11 @@ void MysqlConnectionPool::TerminateConnection(sql::Connection* conn){
             conn->close();
         }
         catch(sql::SQLException &e) {
-			std::cerr << e.what() << std::endl;
+			LOG(ERROR) << e.what();
 		}
         catch(const std::exception& e)
         {
-            std::cerr << e.what() << '\n';
+            LOG(ERROR) << e.what();
         }
         delete conn;
     }
