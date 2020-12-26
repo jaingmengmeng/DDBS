@@ -13,11 +13,11 @@ add_subdirectory(query-tree-scheduler)
 add_subdirectory(network-utils)
 
 # network-utils
-set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/query-tree-scheduler)
-find_library(NETWORK_LIB NAMES network-utils)
+# set(CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR}/query-tree-scheduler)
+# find_library(NETWORK_LIB NAMES network-utils)
 
 add_executable(main main.cpp)
 
 target_link_libraries(main SQLProcessor)
 target_link_libraries(main DataLoader)
-target_link_libraries(main ${NETWORK_LIB})
+target_link_libraries(main network-utils)
