@@ -6,6 +6,8 @@
 #include "ddb.pb.h"
 #include "json.hpp"
 #include "base64.h"
+#include "MysqlConnectionPool.hpp"
+
 
 #include <iterator>
 #include <utility>
@@ -80,13 +82,22 @@ struct temp_table {
 };
 
 bool execute_non_query_sql(const std::string &sql) {
-    sql::mysql::MySQL_Driver *driver;
-    sql::Connection *conn;
-    sql::Statement *stat;
+    // sql::mysql::MySQL_Driver *driver;
+    // sql::Connection *conn;
+    // sql::Statement *stat;
 
-    driver = sql::mysql::get_driver_instance();
-    conn = driver->connect("127.0.0.1", "root", "123456");
-    stat = conn->createStatement();
+    sql::Connection* conn = MysqlPool.GetConnection();
+    while (conn == NULL)
+    {
+        sleep(0.01);
+        conn = MysqlPool.GetConnection();
+    }
+
+    std::auto_ptr<sql::Statement> stat(conn->createStatement());
+
+    // driver = sql::mysql::get_driver_instance();
+    // conn = driver->connect("127.0.0.1", "root", "123456");
+    // stat = conn->createStatement();
     if (sql.length() <= 200){
         LOG(INFO) << "execute sql: " << sql;
     } else{
@@ -97,8 +108,8 @@ bool execute_non_query_sql(const std::string &sql) {
         stat->execute("create database if not exists `" + DB_NAME + "`;");
         stat->execute("use `" + DB_NAME + "`;");
         bool result = stat->execute(sql);
-        stat->close();
-        conn->close();
+        
+        MysqlPool.ReleaseConnection(conn);
         return result;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
@@ -108,20 +119,32 @@ bool execute_non_query_sql(const std::string &sql) {
 }
 
 int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response){
-    sql::mysql::MySQL_Driver *driver;
-    sql::Connection *conn;
-    sql::Statement *stat;
-    sql::ResultSet *rs;
+    // sql::mysql::MySQL_Driver *driver;
+    // sql::Connection *conn;
+    // sql::Statement *stat;
 
-    driver = sql::mysql::get_driver_instance();
-    conn = driver->connect("127.0.0.1", "root", "123456");
-    stat = conn->createStatement();
+    sql::Connection* conn = MysqlPool.GetConnection();
+    while (conn == NULL)
+    {
+        sleep(0.01);
+        conn = MysqlPool.GetConnection();
+    }
 
-    LOG(INFO) << "execute sql: " << sql;
+    std::auto_ptr<sql::Statement> stat(conn->createStatement());
+
+    // driver = sql::mysql::get_driver_instance();
+    // conn = driver->connect("127.0.0.1", "root", "123456");
+    // stat = conn->createStatement();
+    if (sql.length() <= 200){
+        LOG(INFO) << "execute sql: " << sql;
+    } else{
+        LOG(INFO) << "execute sql: " << sql.substr(0, 200) << " ....";
+    }
+
     try {
         stat->execute("create database if not exists `" + DB_NAME + "`;");
         stat->execute("use `" + DB_NAME + "`;");
-        rs = stat->executeQuery(sql);
+        std::auto_ptr<sql::ResultSet> rs(stat->executeQuery(sql));
         LOG(INFO) << "query result row count: " << rs->rowsCount();
         sql::ResultSetMetaData *rsm = rs->getMetaData();
         int count = rsm->getColumnCount();
@@ -149,9 +172,9 @@ int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response)
                 response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
-        rs->close();
-        stat->close();
-        conn->close();
+
+        MysqlPool.ReleaseConnection(conn);
+
         return count;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();
@@ -163,20 +186,31 @@ int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response)
 
 int execute_query_sql(const std::string &sql, const std::string &table_name, TableResponse *response,
                       const std::string &temp_table_type) {
-    sql::mysql::MySQL_Driver *driver;
-    sql::Connection *conn;
-    sql::Statement *stat;
-    sql::ResultSet *rs;
+    // sql::mysql::MySQL_Driver *driver;
+    // sql::Connection *conn;
+    // sql::Statement *stat;
 
-    driver = sql::mysql::get_driver_instance();
-    conn = driver->connect("127.0.0.1", "root", "123456");
-    stat = conn->createStatement();
+    sql::Connection* conn = MysqlPool.GetConnection();
+    while (conn == NULL)
+    {
+        sleep(0.01);
+        conn = MysqlPool.GetConnection();
+    }
 
-    LOG(INFO) << "execute sql: " << sql;
+    std::auto_ptr<sql::Statement> stat(conn->createStatement());
+
+    // driver = sql::mysql::get_driver_instance();
+    // conn = driver->connect("127.0.0.1", "root", "123456");
+    // stat = conn->createStatement();
+    if (sql.length() <= 200){
+        LOG(INFO) << "execute sql: " << sql;
+    } else{
+        LOG(INFO) << "execute sql: " << sql.substr(0, 200) << " ....";
+    }
     try {
         stat->execute("create database if not exists `" + DB_NAME + "`;");
         stat->execute("use `" + DB_NAME + "`;");
-        rs = stat->executeQuery(sql);
+        std::auto_ptr<sql::ResultSet> rs(stat->executeQuery(sql));
         LOG(INFO) << "query result row count: " << rs->rowsCount();
         sql::ResultSetMetaData *rsm = rs->getMetaData();
         int count = rsm->getColumnCount();
@@ -223,9 +257,7 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
                 response->add_attr_values(row.substr(0, row.length() - 1));
             }
         }
-        rs->close();
-        stat->close();
-        conn->close();
+        MysqlPool.ReleaseConnection(conn);
         return count;
     } catch (sql::SQLException &exception) {
         LOG(ERROR) << exception.what();

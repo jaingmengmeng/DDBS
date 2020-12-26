@@ -90,7 +90,7 @@ target_link_libraries(network-utils ${BRPC_LIB} ${DYNAMIC_LIB})
 
 
 add_executable(query-loader src/load_query.cpp src/base64.cpp)
-add_executable(query-scheduler src/schedule_query.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER})
+add_executable(query-scheduler src/schedule_query.cpp src/base64.cpp ${PROTO_SRC} ${PROTO_HEADER} src/MysqlConnectionPool.hpp)
 add_executable(query-executer src/execute_query.cpp ${PROTO_SRC} ${PROTO_HEADER})
 
 
