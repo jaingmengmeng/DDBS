@@ -19,7 +19,7 @@
 const std::string DEFAULT_HOST = "127.0.0.1";
 const std::string DEFAULT_USERNAME = "root";
 const std::string DEFAULT_PASSWORD = "123456";
-const int MAXSIZE = 40;
+const int MAXSIZE = 100;
 
 
 class MysqlConnectionPool{

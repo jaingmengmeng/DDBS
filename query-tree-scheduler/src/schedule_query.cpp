@@ -89,6 +89,7 @@ bool execute_non_query_sql(const std::string &sql) {
     sql::Connection* conn = MysqlPool.GetConnection();
     while (conn == NULL)
     {
+        LOG(ERROR) << "cannot get connection, wait 10ms";
         sleep(0.01);
         conn = MysqlPool.GetConnection();
     }
@@ -126,6 +127,7 @@ int execute_query_sql(const std::string& sql, ExecuteQuerySQLResponse* response)
     sql::Connection* conn = MysqlPool.GetConnection();
     while (conn == NULL)
     {
+        LOG(ERROR) << "cannot get connection, wait 10ms";
         sleep(0.01);
         conn = MysqlPool.GetConnection();
     }
@@ -193,6 +195,7 @@ int execute_query_sql(const std::string &sql, const std::string &table_name, Tab
     sql::Connection* conn = MysqlPool.GetConnection();
     while (conn == NULL)
     {
+        LOG(ERROR) << "cannot get connection, wait 10ms";
         sleep(0.01);
         conn = MysqlPool.GetConnection();
     }
