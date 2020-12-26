@@ -22,7 +22,7 @@ private:
     hsql::SQLParserResult result;
     hsql::SQLStatement* stat;
     
-    void solve_expr(hsql::Expr* expr);  // solve the expr recursively
+    void solve_expr(hsql::Expr* expr, std::vector<Predicate>& where);  // solve the expr recursively
     std::string get_aname_from_expr(hsql::Expr* expr);
     std::vector<std::string> get_anames(std::string rname);
     bool exist_relation(std::string rname);
@@ -32,11 +32,12 @@ public:
     SelectStatement select;
     InsertStatement insert;
     DeleteStatement delete_s;
-    std::vector<Relation*> relations;
+    std::vector<Relation> relations;
     int sql_type;   // 1:select 2:insert 3.delete
     bool is_valid;    // 判断sql中的表名、属性名是否有效
 
-    SQLProcessor(std::string q, std::vector<Relation*> relations);
+    SQLProcessor(std::string q, std::vector<Relation> relations);
+    Relation get_relation_by_rname(std::string rname);
 };
 
 #endif

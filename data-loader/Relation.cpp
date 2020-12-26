@@ -1,18 +1,19 @@
 #include "Relation.h"
 
-Relation::Relation(std::string rname, bool is_horizontal=true) :
-rname(lower_string(rname)), is_horizontal(is_horizontal) {
-    this->num_of_recs = 0;
-}
+Relation::Relation(std::string rname, bool is_horizontal, int num_of_recs) :
+rname(lower_string(rname)), is_horizontal(is_horizontal), num_of_recs(num_of_recs) {}
+
+Relation::Relation(std::string rname, std::vector<Attribute> attributes, bool is_horizontal, int num_of_recs) :
+rname(lower_string(rname)), attributes(attributes), is_horizontal(is_horizontal), num_of_recs(num_of_recs) {} 
 
 std::ostream& operator<<(std::ostream& os, Relation r) {
     os << r.rname << std::string("(");
-    // for(int i=0; i<r.attributes.size(); ++i) {
-    //     if(i > 0)
-    //         os << std::string(", ");
-    //     os << r.attributes[i];
-    // }
-    os << combine_vector_string(r.get_attrs_meta());
+    for(int i=0; i<r.attributes.size(); ++i) {
+        if(i > 0)
+            os << std::string(", ");
+        os << r.attributes[i];
+    }
+    // os << combine_vector_string(r.get_attrs_meta());
     os << std::string(") ");
     if(r.num_of_recs > 0) {
         os << r.num_of_recs;
@@ -104,4 +105,64 @@ bool Relation::in_site(std::string sname) {
         }
     }
     return false;
+}
+
+std::unordered_map<std::string, std::string> Relation::get_site_to_insert(std::string values) {
+    if(this->is_horizontal) {
+        std::unordered_map<std::string, std::string> res;
+        std::vector<std::string> v_value;
+        split_string(values, v_value, ",");
+        for(auto f : this->frags) {
+            int count = 0;
+            for(auto p : f.hf_condition) {
+                for(int i=0; i<this->attributes.size(); ++i) {
+                    if(p.aname == this->attributes[i].aname) {
+                        if(p.test(trim(v_value[i]))) {
+                            count++;
+                        }
+                        break;
+                    }
+                }
+            }
+            if(count == f.hf_condition.size()) {
+                res.insert(std::pair<std::string, std::string>(f.sname, values));
+                break;
+            }
+        }
+        return res;
+    } else {
+        std::unordered_map<std::string, std::string> res;
+        std::vector<std::string> v_value;
+        split_string(values, v_value, ",");
+        for(auto f : this->frags) {
+            std::string temp_value = "";
+            for(auto aname : f.vf_condition) {
+                for(int i=0; i<this->attributes.size(); ++i) {
+                    if(trim(aname) == this->attributes[i].aname) {
+                        if(temp_value != "") temp_value += ",";
+                        temp_value += v_value[i];
+                    }
+                }
+            }
+            // std::cout << temp_value << "#" << std::endl;
+            res.insert(std::pair<std::string, std::string> (f.sname, temp_value));
+        }
+        return res;
+    }
+}
+
+std::string Relation::get_key() {
+    for(auto a : this->attributes) {
+        if(a.is_key) {
+            return a.aname;
+        }
+    }
+}
+
+int Relation::get_key_type() {
+    for(auto a : this->attributes) {
+        if(a.is_key) {
+            return a.type;
+        }
+    }
 }

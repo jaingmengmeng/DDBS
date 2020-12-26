@@ -4,7 +4,7 @@
 
 #include "SQLProcessor.h"
 
-SQLProcessor::SQLProcessor(std::string q, std::vector<Relation*> relations) :
+SQLProcessor::SQLProcessor(std::string q, std::vector<Relation> relations) :
 query(q), relations(relations) {
     this->is_valid = true;  // the sql is valid by default.
     hsql::SQLParser::parseSQLString(this->query, &this->result);
@@ -116,10 +116,11 @@ query(q), relations(relations) {
                     // Operator 8, (only this type in test cases)
                     if(expr->type == hsql::kExprOperator) {
                         // solve the expr recursively
-                        this->solve_expr(expr);
+                        this->solve_expr(expr, this->select.where);
                     }
                 }
 
+                // print select statement
                 if(this->is_valid) {
                     std::cout << this->select << std::endl;
                 }
@@ -128,20 +129,86 @@ query(q), relations(relations) {
             // insert statement
             case hsql::kStmtInsert:
                 this->sql_type = 2;
-                std::cout << "insert" << std::endl;
+                // static_cast to hsql::InsertStatement*
+                this->insert_stat = static_cast<hsql::InsertStatement*>(this->stat);
+
+                // get rname
+                if(this->insert_stat->tableName) {
+                    if(this->exist_relation(this->insert_stat->tableName)) {
+                        this->insert.rname = lower_string(this->insert_stat->tableName);
+                    } else {
+                        this->is_valid = false;
+                    }
+                }
+
+                // get values
+                if(this->is_valid && this->insert_stat->values) {
+                    int index = 0;
+                    Relation r = this->get_relation_by_rname(lower_string(this->insert_stat->tableName));
+                    for (const hsql::Expr* expr : *this->insert_stat->values) {
+                        int attr_type = r.attributes[index].type;
+                        // float type
+                        if(expr->type == hsql::kExprLiteralFloat && attr_type == 1) {
+                            this->insert.add_value(expr->fval);
+                        }
+                        // string type
+                        else if(expr->type == hsql::kExprLiteralString && attr_type == 2) {
+                            this->insert.add_value(expr->name);
+                        }
+                        // int type
+                        else if(expr->type == hsql::kExprLiteralInt && attr_type == 1) {
+                            this->insert.add_value(int(expr->ival));
+                        }
+                        // other type
+                        else {
+                            std::cout << "Now the system only supports data type of int, float and string." << std::endl;
+                            this->is_valid = false;
+                        }
+                        index++;
+                    }
+                }
+
+                // print insert statement
+                if(this->is_valid) {
+                    std::cout << this->insert << std::endl;
+                }
                 break;
 
             // delete statement
             case hsql::kStmtDelete:
                 this->sql_type = 3;
-                std::cout << "delete" << std::endl;
-                break;
+                // static_cast to hsql::DeleteStatement*
+                this->delete_stat = static_cast<hsql::DeleteStatement*>(this->stat);
+                
+                // get rname
+                if(this->delete_stat->tableName) {
+                    std::string rname = lower_string(this->delete_stat->tableName);
+                    if(this->exist_relation(rname)) {
+                        this->delete_s.rname = rname;
+                    } else {
+                        this->is_valid = false;
+                    }
+                }
 
-            // show statement. eg. show tables;
-            // case hsql::kStmtShow:
-            //     this->sql_type = 4;
-            //     std::cout << "show" << std::endl;
-            //     break;
+                // get where clause
+                if(this->is_valid && this->delete_stat->expr) {
+                    hsql::Expr* expr = this->delete_stat->expr;
+                    if(expr->type == hsql::kExprOperator) {
+                        // solve the expr recursively
+                        this->solve_expr(expr, this->delete_s.where);
+                    }
+                }
+
+                // delete rname prefix
+                for(auto& p : this->delete_s.where) {
+                    p.aname = p.aname.substr(p.aname.find_first_of("_")+1) ;
+                }
+
+                // print delete statement
+                if(this->is_valid) {
+                    std::cout << this->delete_s << std::endl;
+                }
+                break;
 
             default:
                 std::cout << "Now the system only supports insert, select and delete statements." << std::endl;
@@ -153,11 +220,11 @@ query(q), relations(relations) {
 }
 
 // solve the expr recursively
-void SQLProcessor::solve_expr(hsql::Expr* expr) {
+void SQLProcessor::solve_expr(hsql::Expr* expr, std::vector<Predicate>& where) {
     // AND 19
     if(expr->opType == hsql::kOpAnd && this->is_valid) {
-        this->solve_expr(expr->expr);
-        this->solve_expr(expr->expr2);
+        this->solve_expr(expr->expr, where);
+        this->solve_expr(expr->expr2, where);
     }
     else {
         std::string aname;
@@ -175,7 +242,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                     aname = this->get_aname_from_expr(expr->expr);
                     str = expr->expr2->getName();
                     if(aname != "") {
-                        this->select.add_where(op_type, aname, str);
+                        where.push_back(Predicate(op_type, aname, str));
                     } else {
                         this->is_valid = false;
                     }
@@ -187,7 +254,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                     aname = this->get_aname_from_expr(expr->expr2);
                     str = expr->expr->getName();
                     if(aname != "") {
-                        this->select.add_where(op_type, aname, str);
+                        where.push_back(Predicate(op_type, aname, str));
                     } else {
                         this->is_valid = false;
                     }
@@ -202,7 +269,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                     if(aname != "" && bname != "") {
                         join.push_back(aname);
                         join.push_back(bname);
-                        this->select.add_where(op_type, join);
+                        where.push_back(Predicate(op_type, join));
                     } else {
                         this->is_valid = false;
                     }
@@ -213,7 +280,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                 aname = this->get_aname_from_expr(expr->expr);
                 num = expr->expr2->ival;
                 if(aname != "") {
-                    this->select.add_where(op_type, aname, num);
+                    where.push_back(Predicate(op_type, aname, num));
                 } else {
                     this->is_valid = false;
                 }
@@ -223,7 +290,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
                 aname = this->get_aname_from_expr(expr->expr2);
                 num = expr->expr->ival;
                 if(aname != "") {
-                    this->select.add_where(op_type, aname, num);
+                    where.push_back(Predicate(op_type, aname, num));
                 } else {
                     this->is_valid = false;
                 }
@@ -236,7 +303,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
             if(aname != "") {
-                this->select.add_where(op_type, aname, num);
+                where.push_back(Predicate(op_type, aname, num));
             } else {
                 this->is_valid = false;
             }
@@ -248,7 +315,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
             if(aname != "") {
-                this->select.add_where(op_type, aname, num);
+                where.push_back(Predicate(op_type, aname, num));
             } else {
                 this->is_valid = false;
             }
@@ -260,7 +327,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
             if(aname != "") {
-                this->select.add_where(op_type, aname, num);
+                where.push_back(Predicate(op_type, aname, num));
             } else {
                 this->is_valid = false;
             }
@@ -272,7 +339,7 @@ void SQLProcessor::solve_expr(hsql::Expr* expr) {
             aname = this->get_aname_from_expr(expr->expr);
             num = expr->expr2->ival;
             if(aname != "") {
-                this->select.add_where(op_type, aname, num);
+                where.push_back(Predicate(op_type, aname, num));
             } else {
                 this->is_valid = false;
             }
@@ -290,8 +357,10 @@ std::string SQLProcessor::get_aname_from_expr(hsql::Expr* expr) {
             rname = lower_string(expr->table);
         } else {
             // eg. select id from user;
-            if(this->select_stat->fromTable->type == hsql::kTableName) {
+            if(this->sql_type == 1 && this->select_stat->fromTable->type == hsql::kTableName) {
                 rname = lower_string(this->select_stat->fromTable->getName());
+            } else if (this->sql_type == 3) {
+                rname = lower_string(this->delete_s.rname);
             }
         }
         aname = lower_string(expr->getName());
@@ -305,8 +374,8 @@ std::string SQLProcessor::get_aname_from_expr(hsql::Expr* expr) {
 
 std::vector<std::string> SQLProcessor::get_anames(std::string rname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
-            return relation->get_anames();
+        if(relation.rname == rname) {
+            return relation.get_anames();
         }
     }
     return std::vector<std::string>{};
@@ -314,7 +383,7 @@ std::vector<std::string> SQLProcessor::get_anames(std::string rname) {
 
 bool SQLProcessor::exist_relation(std::string rname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
+        if(relation.rname == lower_string(rname)) {
             return true;
         }
     }
@@ -324,14 +393,22 @@ bool SQLProcessor::exist_relation(std::string rname) {
 
 bool SQLProcessor::exist_attribute(std::string rname, std::string aname) {
     for(auto relation : this->relations) {
-        if(relation->rname == rname) {
-            for(auto attribute : relation->attributes) {
-                if(attribute.aname == aname) {
+        if(relation.rname == lower_string(rname)) {
+            for(auto attribute : relation.attributes) {
+                if(attribute.aname == lower_string(aname)) {
                     return true;
                 }
             }
         }
     }
-    std::cout << "[ERROR] Unknown column '" + aname + "' in Table '" + rname + "'." << std::endl;
+    std::cout << "[ERROR] Unknown Column '" + aname + "' in Table '" + rname + "'." << std::endl;
     return false;
+}
+
+Relation SQLProcessor::get_relation_by_rname(std::string rname) {
+    for(auto relation : this->relations) {
+        if(relation.rname == rname) {
+            return relation;
+        }
+    }
 }
