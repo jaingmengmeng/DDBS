@@ -18,7 +18,7 @@
 
 using namespace std;
 //变量名小写，类名每个单词开头都大写,函数名和变量名一样
-#define use_transport_optimization 0 //0: not use, 1:use
+#define use_transport_optimization 1 //0: not use, 1:use
 
 const int INF = 2147483647; //take the maximum of int as INF
 // map<string,string> siteno_to_ip;
